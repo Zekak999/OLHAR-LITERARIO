@@ -1,0 +1,97 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   🚀 LEIA ISTO PRIMEIRO - DEPLOY AUTOMÁTICO                  ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Parabéns! Seu projeto agora tem DEPLOY AUTOMÁTICO! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+📝 PASSO A PASSO SIMPLES:
+
+1. Faça suas alterações nos arquivos
+2. Dê DUPLO CLIQUE em: deploy-rapido.bat
+3. Digite o que você mudou (ex: "Corrigi o menu")
+4. Pressione ENTER
+5. PRONTO! ✅
+
+═══════════════════════════════════════════════════════════════
+
+⏱️ TEMPO TOTAL: ~3 minutos
+
+  • Commit e Push: 10 segundos
+  • Deploy no Railway: 2-3 minutos
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTAÇÃO DISPONÍVEL:
+
+  📖 COMO_USAR_DEPLOY.md
+     └─ Guia completo passo a passo com exemplos
+  
+  📄 DEPLOY_AUTOMATICO.md
+     └─ Documentação técnica detalhada
+  
+  📋 GUIA_DEPLOY_RAPIDO.txt
+     └─ Referência rápida visual
+
+═══════════════════════════════════════════════════════════════
+
+🔍 ACOMPANHAR O DEPLOY:
+
+  1. Acesse: https://railway.app/dashboard
+  2. Clique no projeto "olharliterario"
+  3. Vá em "Deployments"
+  4. Aguarde aparecer "Success" (verde)
+
+═══════════════════════════════════════════════════════════════
+
+💡 DICA IMPORTANTE:
+
+  Sempre TESTE localmente antes de fazer deploy!
+  
+  Execute: iniciar.bat
+  Acesse: http://localhost:8000
+  Teste tudo que você mudou
+  
+  Só então faça o deploy! ✅
+
+═══════════════════════════════════════════════════════════════
+
+❓ DÚVIDAS COMUNS:
+
+  P: O que devo escrever na mensagem de commit?
+  R: Descreva o que você mudou.
+     Exemplo: "Fix: Corrigir busca de livros"
+  
+  P: Quanto tempo demora?
+  R: ~3 minutos total (10s push + 2-3min Railway)
+  
+  P: Como saber se deu certo?
+  R: Veja o status no Railway (deve ficar verde "Success")
+  
+  P: Posso fazer deploy várias vezes?
+  R: Sim! Mas aguarde o anterior terminar primeiro.
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE:
+
+  ✓ NÃO feche a janela durante o deploy
+  ✓ NÃO faça deploy se há erros no código
+  ✓ SEMPRE teste localmente primeiro
+  ✓ Aguarde o deploy anterior terminar
+
+═══════════════════════════════════════════════════════════════
+
+🎯 COMEÇAR AGORA:
+
+  Windows Explorer → Duplo clique em:
+  
+  ► deploy-rapido.bat ◄
+
+═══════════════════════════════════════════════════════════════
+
+Boa sorte e bons deploys! 🚀
+
