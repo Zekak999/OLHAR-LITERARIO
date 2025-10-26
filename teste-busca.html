@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Busca - Olhar Literário</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #ff8b7e;
+            --secondary-color: #ff6b5a;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-light: #f8f9fa;
+            --card-bg: #fff5f3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            border-radius: 50px;
+            padding: 15px 25px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .search-input-wrapper:focus-within {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 5px 15px rgba(255, 139, 126, 0.2);
+        }
+
+        .search-icon {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .search-dropdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 10px;
+        }
+
+        .dropdown-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+
+        .dropdown-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            margin-top: 10px;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .dropdown-menu a:hover {
+            background: var(--card-bg);
+            color: var(--primary-color);
+        }
+
+        .search-suggestions-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: none;
+            z-index: 1000;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .info-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .info-box h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .test-instructions {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .test-instructions h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .test-instructions ol {
+            padding-left: 20px;
+        }
+
+        .test-instructions li {
+            padding: 5px 0;
+            line-height: 1.6;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .notification.error {
+            border-left: 4px solid #e74c3c;
+        }
+
+        mark {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 Olhar Literário</h1>
+            <p>Teste de Busca em Tempo Real</p>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle>
+                        <path d="M20 20L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                    <input type="text" placeholder="Digite para buscar livros... (ex: Harry, Hobbit, 1984)" class="search-input">
+                    <div class="search-dropdown">
+                        <button class="dropdown-btn" onclick="toggleSearchDropdown()">
+                            livros
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="searchDropdown">
+                            <a href="#" onclick="selectSearchOption('livros')">livros</a>
+                            <a href="#" onclick="selectSearchOption('autores')">autores</a>
+                            <a href="#" onclick="selectSearchOption('editoras')">editoras</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h2>✨ Recursos da Nova Busca</h2>
+            <ul class="feature-list">
+                <li>Busca começa com apenas <strong>1 letra</strong></li>
+                <li>Termo buscado aparece <mark>destacado</mark></li>
+                <li>Mostra até <strong>8 resultados</strong> simultâneos</li>
+                <li>Badge <span style="background: gold; color: black; padding: 2px 6px; border-radius: 3px; font-size: 10px;">⭐ DESTAQUE</span> para livros em destaque</li>
+                <li>Exibe o <strong>gênero</strong> do livro</li>
+                <li>Resposta em <strong>200ms</strong> (super rápida!)</li>
+                <li>Efeito de hover animado</li>
+                <li>Contador de resultados no rodapé</li>
+            </ul>
+
+            <div class="test-instructions">
+                <h3>🧪 Como Testar:</h3>
+                <ol>
+                    <li><strong>Digite uma letra</strong> (ex: "H") e veja as sugestões aparecerem</li>
+                    <li><strong>Continue digitando</strong> (ex: "Ha") e veja os resultados se refinarem</li>
+                    <li><strong>Observe o destaque</strong> amarelo nas letras que você digitou</li>
+                    <li><strong>Passe o mouse</strong> sobre os resultados para ver a animação</li>
+                    <li><strong>Pressione Enter</strong> ou clique em um resultado</li>
+                    <li><strong>Teste diferentes filtros</strong>: livros, autores, editoras</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Dados de exemplo (simulando API)
+        const livrosExemplo = [
+            { id: 1, titulo: "Harry Potter e a Pedra Filosofal", autor: "J.K. Rowling", genero: "Fantasia", destaque: true, capa: "https://m.media-amazon.com/images/I/81ibfYk4qmL._SY466_.jpg" },
+            { id: 2, titulo: "O Hobbit", autor: "J.R.R. Tolkien", genero: "Fantasia", destaque: true, capa: "https://m.media-amazon.com/images/I/91b0C2YNSrL.jpg" },
+            { id: 3, titulo: "1984", autor: "George Orwell", genero: "Ficção Distópica", destaque: false, capa: "https://m.media-amazon.com/images/I/71kxa1-0mfL.jpg" },
+            { id: 4, titulo: "O Pequeno Príncipe", autor: "Antoine de Saint-Exupéry", genero: "Infantil", destaque: true, capa: "https://m.media-amazon.com/images/I/81e4r7WZxYL.jpg" },
+            { id: 5, titulo: "A Culpa é das Estrelas", autor: "John Green", genero: "Romance", destaque: false, capa: "https://m.media-amazon.com/images/I/71aFt4+OTOL.jpg" },
+            { id: 6, titulo: "O Senhor dos Anéis", autor: "J.R.R. Tolkien", genero: "Fantasia", destaque: true, capa: "https://m.media-amazon.com/images/I/91b0C2YNSrL.jpg" },
+            { id: 7, titulo: "Dom Casmurro", autor: "Machado de Assis", genero: "Romance", destaque: false, capa: "https://m.media-amazon.com/images/I/81Jx0sWw1-L.jpg" },
+            { id: 8, titulo: "O Alquimista", autor: "Paulo Coelho", genero: "Ficção", destaque: false, capa: "https://m.media-amazon.com/images/I/71aFt4+OTOL.jpg" },
+        ];
+
+        const $ = (sel) => document.querySelector(sel);
+        let timeoutBusca = null;
+
+        function toggleSearchDropdown() {
+            const dropdown = $('#searchDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function selectSearchOption(option) {
+            const btn = $('.dropdown-btn');
+            btn.childNodes[0].textContent = option + ' ';
+            $('#searchDropdown').classList.remove('active');
+            showNotification(`Filtro alterado para: ${option}`);
+        }
+
+        function destacarTexto(texto, termo) {
+            if (!texto || !termo) return texto;
+            const regex = new RegExp(`(${termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return texto.replace(regex, '<mark>$1</mark>');
+        }
+
+        function buscarSugestoes() {
+            const searchInput = $('.search-input');
+            const searchTerm = searchInput.value.trim();
+
+            if (timeoutBusca) clearTimeout(timeoutBusca);
+
+            if (!searchTerm || searchTerm.length < 1) {
+                fecharDropdownSugestoes();
+                return;
+            }
+
+            console.log('🔍 Buscando:', searchTerm);
+
+            timeoutBusca = setTimeout(() => {
+                const btn = $('.dropdown-btn');
+                let searchType = btn.childNodes[0].textContent.trim().toLowerCase();
+
+                // Filtrar livros
+                let resultados = livrosExemplo.filter(livro => {
+                    if (searchType === 'autores') {
+                        return livro.autor.toLowerCase().includes(searchTerm.toLowerCase());
+                    } else if (searchType === 'editoras') {
+                        return false; // Não temos editoras nos dados de exemplo
+                    } else {
+                        return livro.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                               livro.autor.toLowerCase().includes(searchTerm.toLowerCase());
+                    }
+                });
+
+                console.log('📚 Encontrados:', resultados.length);
+
+                if (resultados.length === 0) {
+                    mostrarMensagemSemResultados(searchTerm);
+                } else {
+                    mostrarDropdownSugestoes(resultados.slice(0, 8), searchTerm);
+                }
+            }, 200);
+        }
+
+        function mostrarMensagemSemResultados(searchTerm) {
+            let dropdown = $('.search-suggestions-dropdown');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'search-suggestions-dropdown';
+                $('.search-box').appendChild(dropdown);
+            }
+
+            dropdown.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: var(--text-light);">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📚</div>
+                    <div style="font-size: 14px;">Nenhum resultado para "${searchTerm}"</div>
+                    <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Tente outro termo de busca</div>
+                </div>
+            `;
+            dropdown.style.display = 'block';
+        }
+
+        function mostrarDropdownSugestoes(livros, searchTerm) {
+            let dropdown = $('.search-suggestions-dropdown');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'search-suggestions-dropdown';
+                $('.search-box').appendChild(dropdown);
+            }
+
+            const sugestoesHtml = livros.map(livro => {
+                const tituloDestacado = destacarTexto(livro.titulo, searchTerm);
+                const autorDestacado = destacarTexto(livro.autor, searchTerm);
+                const badgeDestaque = livro.destaque ? 
+                    '<span style="background: gold; color: black; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">⭐ DESTAQUE</span>' : '';
+
+                return `
+                    <div class="suggestion-item" onclick="showNotification('Abrindo: ${livro.titulo}')" 
+                         style="cursor: pointer; display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e0e0e0; transition: all 0.2s;">
+                        <img src="${livro.capa}" alt="${livro.titulo}" 
+                             style="width: 50px; height: 75px; object-fit: cover; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: var(--primary-color); font-size: 15px; margin-bottom: 4px;">
+                                ${tituloDestacado}${badgeDestaque}
+                            </div>
+                            <div style="color: var(--text-light); font-size: 13px; margin-bottom: 4px;">
+                                ${autorDestacado}
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-light); opacity: 0.8;">📖 ${livro.genero}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; color: var(--primary-color); font-size: 20px;">›</div>
+                    </div>
+                `;
+            }).join('');
+
+            const footer = `
+                <div style="padding: 10px; background: var(--bg-light); text-align: center; font-size: 12px; color: var(--text-light); border-top: 1px solid #e0e0e0;">
+                    ${livros.length} resultado${livros.length > 1 ? 's' : ''} encontrado${livros.length > 1 ? 's' : ''}
+                    <span style="margin: 0 5px;">•</span>
+                    Pressione Enter para ver todos
+                </div>
+            `;
+
+            dropdown.innerHTML = sugestoesHtml + footer;
+            dropdown.style.display = 'block';
+
+            dropdown.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.background = 'var(--card-bg)';
+                    this.style.transform = 'translateX(5px)';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.background = 'white';
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+        }
+
+        function fecharDropdownSugestoes() {
+            const dropdown = $('.search-suggestions-dropdown');
+            if (dropdown) dropdown.style.display = 'none';
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = $('#notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = $('.search-input');
+            searchInput.addEventListener('input', buscarSugestoes);
+
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    showNotification('Buscando resultados completos...');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-box')) {
+                    fecharDropdownSugestoes();
+                }
+                if (!e.target.closest('.search-dropdown')) {
+                    $('#searchDropdown').classList.remove('active');
+                }
+            });
+
+            showNotification('✨ Página de teste carregada! Digite algo na busca.');
+        });
+    </script>
+</body>
+</html>
