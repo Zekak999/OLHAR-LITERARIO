@@ -299,6 +299,70 @@
                 }
             })();
         }
+
+        // Função para alterar foto de perfil
+        async function alterarFotoPerfil(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                showNotification('Nenhum arquivo selecionado', 'error');
+                return;
+            }
+
+            // Validar tipo de arquivo
+            if (!file.type.startsWith('image/')) {
+                showNotification('Por favor, selecione uma imagem válida', 'error');
+                return;
+            }
+
+            // Validar tamanho (máximo 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('A imagem deve ter no máximo 5MB', 'error');
+                return;
+            }
+
+            showNotification('Enviando foto...');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/upload-photo', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showNotification(err.error || 'Erro ao enviar foto', 'error');
+                    return;
+                }
+
+                const data = await res.json();
+                
+                // Atualizar a imagem na página
+                const fotoImg = document.getElementById('perfilPageFoto');
+                if (fotoImg) {
+                    fotoImg.src = data.foto + '?t=' + new Date().getTime(); // Cache bust
+                }
+
+                // Atualizar foto no header também
+                const headerFoto = document.querySelector('.user-info img');
+                if (headerFoto) {
+                    headerFoto.src = data.foto + '?t=' + new Date().getTime();
+                }
+
+                userProfile.foto = data.foto;
+                showNotification('Foto atualizada com sucesso!', 'success');
+
+            } catch (err) {
+                console.error('Erro ao fazer upload:', err);
+                showNotification('Erro de conexão ao enviar foto', 'error');
+            }
+        }
     </script>
 </body>
 </html>
