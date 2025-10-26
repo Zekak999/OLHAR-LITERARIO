@@ -1,0 +1,77 @@
+═══════════════════════════════════════════════════════════════
+   🚀 GUIA RÁPIDO - DEPLOY AUTOMÁTICO 
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│  PASSO 1: Fazer suas alterações no código                   │
+│  ✓ Edite os arquivos que precisa                            │
+│  ✓ Teste localmente para garantir que funciona              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  PASSO 2: Executar o deploy                                 │
+│                                                              │
+│  👉 OPÇÃO 1 - Mais Fácil (Interface):                       │
+│     • Dê duplo clique em: deploy-rapido.bat                 │
+│     • Digite sua mensagem de commit                          │
+│     • Pressione Enter                                        │
+│                                                              │
+│  👉 OPÇÃO 2 - Via Terminal:                                 │
+│     • Abra PowerShell nesta pasta                           │
+│     • Execute: .\deploy.ps1                                 │
+│     • Ou: .\deploy.ps1 -mensagem "Sua mensagem"            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  PASSO 3: Acompanhar o deploy no Railway                    │
+│                                                              │
+│  1. Acesse: https://railway.app/dashboard                   │
+│  2. Selecione o projeto "olharliterario"                    │
+│  3. Vá em "Deployments"                                     │
+│  4. Aguarde aparecer "Success" (~2-3 minutos)               │
+└─────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+📊 O QUE O SCRIPT FAZ AUTOMATICAMENTE:
+
+  ✓ [1/4] Verifica se há alterações nos arquivos
+  ✓ [2/4] Faz commit no Git local
+  ✓ [3/4] Envia (push) para o GitHub
+  ✓ [4/4] Railway detecta e inicia deploy automático
+
+═══════════════════════════════════════════════════════════════
+
+💡 DICAS IMPORTANTES:
+
+  • Use mensagens descritivas nos commits
+    Exemplo: "Fix: Corrigir busca de livros"
+    
+  • Teste SEMPRE localmente antes de fazer deploy
+  
+  • Aguarde o deploy anterior terminar antes de fazer outro
+  
+  • Se algo der errado, verifique os logs no Railway
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ SOLUÇÃO DE PROBLEMAS:
+
+  Problema: "Nenhuma alteração detectada"
+  Solução: Você não modificou nenhum arquivo
+  
+  Problema: "Erro ao fazer push"
+  Solução: Verifique sua conexão de internet
+  
+  Problema: "Deploy não inicia no Railway"
+  Solução: Confira se o projeto está conectado ao GitHub
+
+═══════════════════════════════════════════════════════════════
+
+📞 PRECISA DE AJUDA?
+
+  1. Leia o arquivo: DEPLOY_AUTOMATICO.md
+  2. Verifique os logs do Railway
+  3. Teste o deploy localmente primeiro
+
+═══════════════════════════════════════════════════════════════

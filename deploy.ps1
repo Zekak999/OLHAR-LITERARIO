@@ -53,11 +53,11 @@ Write-Host "O Railway detectará as alterações automaticamente e fará o deplo
 Write-Host ""
 
 Write-Host "=====================================" -ForegroundColor Green
-Write-Host "  ✓ Deploy Concluído com Sucesso!" -ForegroundColor Green
+Write-Host "  Deploy Concluido com Sucesso!" -ForegroundColor Green
 Write-Host "=====================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Próximos passos:" -ForegroundColor Cyan
+Write-Host "Proximos passos:" -ForegroundColor Cyan
 Write-Host "1. Aguarde 2-3 minutos para o Railway processar o deploy" -ForegroundColor White
 Write-Host "2. Acesse seu projeto no Railway para acompanhar o deploy" -ForegroundColor White
-Write-Host "3. Teste as alterações no site hospedado" -ForegroundColor White
+Write-Host "3. Teste as alteracoes no site hospedado" -ForegroundColor White
 Write-Host ""
