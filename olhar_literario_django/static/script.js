@@ -334,37 +334,99 @@ async function buscarSugestoes() {
         clearTimeout(timeoutBusca);
     }
     
-    // Se o campo estiver vazio, fechar dropdown
-    if (!searchTerm || searchTerm.length < 2) {
+    // Se o campo estiver vazio ou muito curto, fechar dropdown
+    if (!searchTerm || searchTerm.length < 1) {
         fecharDropdownSugestoes();
         return;
     }
     
-    // Aguardar 300ms antes de buscar (debounce)
+    console.log('🔍 Buscando sugestões para:', searchTerm);
+    
+    // Aguardar 200ms antes de buscar (debounce mais rápido)
     timeoutBusca = setTimeout(async () => {
         try {
-            const res = await fetch(`/api/books?q=${encodeURIComponent(searchTerm)}`);
-            if (!res.ok) return;
+            // Obter tipo de busca
+            const btn = $('.search-dropdown .dropdown-btn');
+            let searchType = 'livros';
+            if (btn && btn.childNodes && btn.childNodes[0]) {
+                searchType = btn.childNodes[0].textContent.trim().toLowerCase();
+            }
             
-            const livros = await res.json();
+            // Construir URL baseada no tipo de busca
+            let url = '';
+            if (searchType === 'autores') {
+                url = `/api/books?autor=${encodeURIComponent(searchTerm)}`;
+            } else if (searchType === 'editoras') {
+                url = `/api/books?editora=${encodeURIComponent(searchTerm)}`;
+            } else {
+                url = `/api/books?q=${encodeURIComponent(searchTerm)}`;
+            }
             
-            if (!Array.isArray(livros) || livros.length === 0) {
+            console.log('📡 Buscando em:', url);
+            
+            const res = await fetch(url);
+            if (!res.ok) {
                 fecharDropdownSugestoes();
                 return;
             }
             
-            // Limitar a 5 sugestões
-            const sugestoes = livros.slice(0, 5);
-            mostrarDropdownSugestoes(sugestoes);
+            const livros = await res.json();
+            console.log('📚 Sugestões encontradas:', livros.length);
+            
+            if (!Array.isArray(livros) || livros.length === 0) {
+                // Mostrar mensagem de "nenhum resultado"
+                mostrarMensagemSemResultados(searchTerm);
+                return;
+            }
+            
+            // Limitar a 8 sugestões (aumentado de 5)
+            const sugestoes = livros.slice(0, 8);
+            mostrarDropdownSugestoes(sugestoes, searchTerm);
             
         } catch (err) {
             console.error('Erro ao buscar sugestões:', err);
+            fecharDropdownSugestoes();
         }
-    }, 300);
+    }, 200);
+}
+
+// Mostrar mensagem quando não há resultados
+function mostrarMensagemSemResultados(searchTerm) {
+    let dropdown = $('#searchSuggestionsDropdown');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'searchSuggestionsDropdown';
+        dropdown.className = 'search-suggestions-dropdown';
+        
+        const searchBox = $('.search-box');
+        if (searchBox) {
+            searchBox.style.position = 'relative';
+            searchBox.appendChild(dropdown);
+        }
+    }
+    
+    dropdown.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: var(--text-light);">
+            <div style="font-size: 24px; margin-bottom: 10px;">📚</div>
+            <div style="font-size: 14px;">Nenhum resultado para "${searchTerm}"</div>
+            <div style="font-size: 12px; margin-top: 5px; color: var(--text-light); opacity: 0.7;">
+                Tente outro termo de busca
+            </div>
+        </div>
+    `;
+    dropdown.style.display = 'block';
+}
+
+// Destacar termo de busca no texto
+function destacarTexto(texto, termo) {
+    if (!texto || !termo) return texto;
+    
+    const regex = new RegExp(`(${termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return texto.replace(regex, '<mark style="background: #fff3cd; padding: 2px 4px; border-radius: 3px; font-weight: 600;">$1</mark>');
 }
 
 // Mostrar Dropdown de Sugestões
-function mostrarDropdownSugestoes(livros) {
+function mostrarDropdownSugestoes(livros, searchTerm) {
     // Criar ou obter dropdown
     let dropdown = $('#searchSuggestionsDropdown');
     if (!dropdown) {
@@ -380,21 +442,46 @@ function mostrarDropdownSugestoes(livros) {
         }
     }
     
-    // Construir HTML das sugestões
+    // Construir HTML das sugestões com destaque
     const sugestoesHtml = livros.map(livro => {
         const capaUrl = livro.capa || 'https://via.placeholder.com/50x75/ff8b7e/ffffff?text=Livro';
+        const tituloDestacado = destacarTexto(livro.titulo, searchTerm);
+        const autorDestacado = destacarTexto(livro.autor || 'Autor Desconhecido', searchTerm);
+        
+        // Adicionar badge se for destaque
+        const badgeDestaque = livro.destaque ? 
+            '<span style="background: gold; color: black; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">⭐ DESTAQUE</span>' : '';
+        
         return `
-            <div class="suggestion-item" onclick="window.location.href='livro.html?id=${livro.id}'" style="cursor: pointer; display: flex; gap: 10px; padding: 10px; border-bottom: 1px solid #e0e0e0; transition: background 0.2s;">
-                <img src="${capaUrl}" alt="${livro.titulo}" style="width: 40px; height: 60px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/40x60/ff8b7e/ffffff?text=Livro'">
+            <div class="suggestion-item" onclick="window.location.href='livro.html?id=${livro.id}'" 
+                 style="cursor: pointer; display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #e0e0e0; transition: all 0.2s;">
+                <img src="${capaUrl}" alt="${livro.titulo}" 
+                     style="width: 50px; height: 75px; object-fit: cover; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
+                     onerror="this.src='https://via.placeholder.com/50x75/ff8b7e/ffffff?text=Livro'">
                 <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 600; color: var(--primary-color); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${livro.titulo}</div>
-                    <div style="color: var(--text-light); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${livro.autor || 'Autor Desconhecido'}</div>
+                    <div style="font-weight: 600; color: var(--primary-color); font-size: 15px; margin-bottom: 4px; display: flex; align-items: center;">
+                        ${tituloDestacado}${badgeDestaque}
+                    </div>
+                    <div style="color: var(--text-light); font-size: 13px; margin-bottom: 4px;">
+                        ${autorDestacado}
+                    </div>
+                    ${livro.genero ? `<div style="font-size: 11px; color: var(--text-light); opacity: 0.8;">📖 ${livro.genero}</div>` : ''}
                 </div>
+                <div style="display: flex; align-items: center; color: var(--primary-color); font-size: 20px;">›</div>
             </div>
         `;
     }).join('');
     
-    dropdown.innerHTML = sugestoesHtml;
+    // Adicionar footer com contador
+    const footer = `
+        <div style="padding: 10px; background: var(--bg-light); text-align: center; font-size: 12px; color: var(--text-light); border-top: 1px solid #e0e0e0;">
+            ${livros.length} resultado${livros.length > 1 ? 's' : ''} encontrado${livros.length > 1 ? 's' : ''}
+            <span style="margin: 0 5px;">•</span>
+            Pressione Enter para ver todos
+        </div>
+    `;
+    
+    dropdown.innerHTML = sugestoesHtml + footer;
     dropdown.style.display = 'block';
     
     // Adicionar hover effect
@@ -402,9 +489,11 @@ function mostrarDropdownSugestoes(livros) {
     items.forEach(item => {
         item.addEventListener('mouseenter', function() {
             this.style.background = 'var(--card-bg)';
+            this.style.transform = 'translateX(5px)';
         });
         item.addEventListener('mouseleave', function() {
             this.style.background = 'white';
+            this.style.transform = 'translateX(0)';
         });
     });
 }
