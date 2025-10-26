@@ -2,6 +2,11 @@
 
 Site completo de uma plataforma literária com design moderno e funcional.
 
+## 🚀 **Deploy Automático Disponível!**
+
+Agora você pode fazer deploy automático para GitHub e Railway com apenas 1 clique!
+📖 [Ver Guia de Deploy Automático](DEPLOY_AUTOMATICO.md)
+
 ## ⚡ **NOVO: Versão Django com Banco de Dados!**
 
 Este projeto agora possui duas versões:
