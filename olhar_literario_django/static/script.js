@@ -16,6 +16,275 @@ let userProfile = {
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+// ===== NOVA BARRA DE PESQUISA INTELIGENTE =====
+let novaSearchTimeout = null;
+let novaSearchCurrentFilter = 'livros';
+let novaSearchIsSearching = false;
+
+// Inicializar nova barra de pesquisa
+function initNovaSearchBar() {
+    const searchInput = $('#novaSearchInput');
+    const searchIcon = $('.nova-search-icon');
+    const filterBtn = $('#novaFilterBtn');
+    const filterMenu = $('#novaFilterMenu');
+    const filterOptions = $$('.nova-filter-option');
+    
+    if (!searchInput) return;
+    
+    // Input - Buscar sugestões em tempo real
+    searchInput.addEventListener('input', novaSearchSugestoes);
+    
+    // Enter - Realizar busca completa
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            novaRealizarBusca();
+        }
+    });
+    
+    // Ícone - Realizar busca completa
+    if (searchIcon) {
+        searchIcon.addEventListener('click', novaRealizarBusca);
+    }
+    
+    // Filtro - Toggle menu
+    if (filterBtn) {
+        filterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterMenu.classList.toggle('active');
+        });
+    }
+    
+    // Filtro - Selecionar opção
+    filterOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const filter = option.dataset.filter;
+            novaSearchCurrentFilter = filter;
+            
+            // Atualizar texto do botão
+            const filterText = $('#novaFilterText');
+            if (filterText) {
+                filterText.textContent = filter.charAt(0).toUpperCase() + filter.slice(1);
+            }
+            
+            // Marcar opção ativa
+            filterOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            
+            // Fechar menu
+            filterMenu.classList.remove('active');
+            
+            // Refazer busca se houver texto
+            if (searchInput.value.trim()) {
+                novaSearchSugestoes();
+            }
+        });
+    });
+    
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nova-search-wrapper')) {
+            novaFecharSugestoes();
+        }
+        if (!e.target.closest('.nova-search-filter')) {
+            if (filterMenu) filterMenu.classList.remove('active');
+        }
+    });
+}
+
+// Buscar sugestões em tempo real
+async function novaSearchSugestoes() {
+    const searchInput = $('#novaSearchInput');
+    if (!searchInput) return;
+    
+    const termo = searchInput.value.trim();
+    
+    // Limpar timeout anterior
+    if (novaSearchTimeout) {
+        clearTimeout(novaSearchTimeout);
+    }
+    
+    // Fechar se vazio ou muito curto
+    if (!termo || termo.length < 1) {
+        novaFecharSugestoes();
+        return;
+    }
+    
+    // Aguardar 200ms antes de buscar (debounce)
+    novaSearchTimeout = setTimeout(async () => {
+        console.log('🔍 Nova busca:', termo, '| Filtro:', novaSearchCurrentFilter);
+        
+        try {
+            // Montar URL de busca
+            let url = `/api/books?q=${encodeURIComponent(termo)}`;
+            
+            // Adicionar filtro específico se não for 'livros'
+            if (novaSearchCurrentFilter === 'autores') {
+                url += `&autor=${encodeURIComponent(termo)}`;
+            } else if (novaSearchCurrentFilter === 'editoras') {
+                url += `&editora=${encodeURIComponent(termo)}`;
+            }
+            
+            const res = await fetch(url);
+            if (!res.ok) {
+                console.warn('Erro na busca:', res.status);
+                return;
+            }
+            
+            const livros = await res.json();
+            console.log('📚 Encontrados:', livros.length, 'livros');
+            
+            if (!Array.isArray(livros) || livros.length === 0) {
+                novaMostrarVazio(termo);
+                return;
+            }
+            
+            // Limitar a 8 sugestões
+            const sugestoes = livros.slice(0, 8);
+            novaMostrarSugestoes(sugestoes, termo);
+            
+        } catch (err) {
+            console.error('Erro ao buscar sugestões:', err);
+            novaFecharSugestoes();
+        }
+    }, 200);
+}
+
+// Mostrar sugestões
+function novaMostrarSugestoes(livros, termo) {
+    const dropdown = $('#novaSuggestionsDropdown');
+    if (!dropdown) return;
+    
+    // Destacar termo buscado
+    const destacar = (texto) => {
+        if (!texto || !termo) return texto;
+        const regex = new RegExp(`(${termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return texto.replace(regex, '<mark>$1</mark>');
+    };
+    
+    // Construir HTML das sugestões
+    const html = livros.map(livro => {
+        const capa = livro.capa_url || livro.capa || 'https://via.placeholder.com/50x70/ff8b7e/ffffff?text=Livro';
+        const titulo = destacar(livro.titulo);
+        const autor = destacar(livro.autor || 'Autor Desconhecido');
+        const genero = livro.genero || 'Sem gênero';
+        const badge = livro.destaque ? '<span class="nova-suggestion-badge">⭐ DESTAQUE</span>' : '';
+        
+        return `
+            <div class="nova-suggestion-item" onclick="window.location.href='livro.html?id=${livro.id}'">
+                <img src="${capa}" alt="${livro.titulo}" class="nova-suggestion-cover" 
+                     onerror="this.src='https://via.placeholder.com/50x70/ff8b7e/ffffff?text=Livro'">
+                <div class="nova-suggestion-info">
+                    <div class="nova-suggestion-title">${titulo}${badge}</div>
+                    <div class="nova-suggestion-author">${autor}</div>
+                    <div class="nova-suggestion-genre">📖 ${genero}</div>
+                </div>
+                <div class="nova-suggestion-arrow">›</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Footer com contador
+    const footer = `
+        <div class="nova-suggestions-footer">
+            ${livros.length} resultado${livros.length > 1 ? 's' : ''} encontrado${livros.length > 1 ? 's' : ''}
+            <span style="margin: 0 8px;">•</span>
+            Pressione Enter para buscar todos
+        </div>
+    `;
+    
+    dropdown.innerHTML = html + footer;
+    dropdown.classList.add('show');
+}
+
+// Mostrar mensagem de vazio
+function novaMostrarVazio(termo) {
+    const dropdown = $('#novaSuggestionsDropdown');
+    if (!dropdown) return;
+    
+    dropdown.innerHTML = `
+        <div class="nova-suggestions-empty">
+            <div class="nova-suggestions-empty-icon">📚</div>
+            <div class="nova-suggestions-empty-text">Nenhum resultado encontrado</div>
+            <div class="nova-suggestions-empty-hint">Tente buscar por "${termo}" com outro filtro</div>
+        </div>
+    `;
+    dropdown.classList.add('show');
+}
+
+// Fechar sugestões
+function novaFecharSugestoes() {
+    const dropdown = $('#novaSuggestionsDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+}
+
+// Realizar busca completa
+async function novaRealizarBusca() {
+    if (novaSearchIsSearching) return; // Prevenir múltiplas buscas simultâneas
+    
+    const searchInput = $('#novaSearchInput');
+    if (!searchInput) return;
+    
+    const termo = searchInput.value.trim();
+    if (!termo) {
+        showNotification('Digite algo para buscar', 'error');
+        return;
+    }
+    
+    novaSearchIsSearching = true;
+    novaFecharSugestoes();
+    
+    console.log('🔍 Busca completa:', termo, '| Filtro:', novaSearchCurrentFilter);
+    
+    try {
+        showNotification(`Buscando ${novaSearchCurrentFilter}: ${termo}...`);
+        
+        // Montar URL de busca
+        let url = `/api/books?q=${encodeURIComponent(termo)}`;
+        
+        if (novaSearchCurrentFilter === 'autores') {
+            url += `&autor=${encodeURIComponent(termo)}`;
+        } else if (novaSearchCurrentFilter === 'editoras') {
+            url += `&editora=${encodeURIComponent(termo)}`;
+        }
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Erro na busca');
+        
+        const livros = await res.json();
+        console.log('📚 Resultados:', livros.length);
+        
+        if (!Array.isArray(livros) || livros.length === 0) {
+            showNotification('Nenhum resultado encontrado', 'error');
+            novaSearchIsSearching = false;
+            return;
+        }
+        
+        // Se encontrou 1 livro, redirecionar direto
+        if (livros.length === 1) {
+            showNotification(`Abrindo: ${livros[0].titulo}`);
+            setTimeout(() => {
+                window.location.href = `livro.html?id=${livros[0].id}`;
+            }, 500);
+        } else {
+            // Se encontrou múltiplos, abrir primeiro
+            showNotification(`${livros.length} resultados encontrados. Abrindo primeiro...`);
+            setTimeout(() => {
+                window.location.href = `livro.html?id=${livros[0].id}`;
+            }, 800);
+        }
+        
+    } catch (err) {
+        console.error('Erro na busca:', err);
+        showNotification('Erro ao realizar busca', 'error');
+    } finally {
+        novaSearchIsSearching = false;
+    }
+}
+// ===== FIM DA NOVA BARRA DE PESQUISA =====
+
 // --- API helpers (token storage + fetch wrapper) ---
 const API_BASE = '';
 function getToken() { return localStorage.getItem('authToken') || ''; }
@@ -1653,6 +1922,9 @@ document.head.appendChild(style);
 // The following DOM-dependent initialization is performed when the DOM is ready
 document.addEventListener('DOMContentLoaded', async function() {
     showNotification('Bem-vindo ao Olhar Literário! 📚');
+
+    // Inicializar nova barra de pesquisa
+    initNovaSearchBar();
 
     // Try to restore logged-in user from token
     await loadCurrentUser();

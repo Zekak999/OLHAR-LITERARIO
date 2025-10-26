@@ -52,6 +52,319 @@ body {
     gap: 30px;
 }
 
+/* ===== NOVA BARRA DE PESQUISA INTELIGENTE ===== */
+.nova-search-container {
+    flex: 1;
+    max-width: 700px;
+    min-width: 300px;
+}
+
+.nova-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #ffe8dc 0%, #ffd4c4 100%);
+    border-radius: 50px;
+    padding: 14px 24px;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(255, 139, 126, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.nova-search-wrapper:focus-within {
+    box-shadow: 0 6px 30px rgba(255, 139, 126, 0.4);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.nova-search-icon {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.nova-search-icon:hover {
+    transform: scale(1.1);
+}
+
+.nova-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dark);
+    outline: none;
+    min-width: 0;
+}
+
+.nova-search-input::placeholder {
+    color: rgba(44, 62, 80, 0.5);
+    font-weight: 400;
+}
+
+/* Filtro de tipo de busca */
+.nova-search-filter {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.nova-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 139, 126, 0.3);
+}
+
+.nova-filter-btn:hover {
+    background: #ff6b5a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 139, 126, 0.4);
+}
+
+.nova-filter-btn:active {
+    transform: translateY(0);
+}
+
+.nova-filter-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    min-width: 150px;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nova-filter-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nova-filter-option {
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.nova-filter-option:last-child {
+    border-bottom: none;
+}
+
+.nova-filter-option:hover {
+    background: var(--card-bg);
+    color: var(--secondary-color);
+    padding-left: 22px;
+}
+
+.nova-filter-option.active {
+    background: linear-gradient(135deg, #ffe8dc 0%, #ffd4c4 100%);
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+/* Dropdown de Sugestões */
+.nova-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    z-index: 1000;
+    max-height: 500px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-15px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nova-suggestions-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nova-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.nova-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.nova-suggestion-item:hover {
+    background: linear-gradient(135deg, #ffe8dc 0%, #ffd4c4 100%);
+    padding-left: 24px;
+}
+
+.nova-suggestion-cover {
+    width: 50px;
+    height: 70px;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.nova-suggestion-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.nova-suggestion-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nova-suggestion-title mark {
+    background: #fff3cd;
+    color: var(--secondary-color);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+
+.nova-suggestion-author {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.nova-suggestion-genre {
+    font-size: 11px;
+    color: var(--text-light);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nova-suggestion-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, gold 0%, #ffd700 100%);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    box-shadow: 0 2px 6px rgba(255, 215, 0, 0.4);
+}
+
+.nova-suggestion-arrow {
+    font-size: 22px;
+    color: var(--secondary-color);
+    transition: transform 0.3s ease;
+}
+
+.nova-suggestion-item:hover .nova-suggestion-arrow {
+    transform: translateX(5px);
+}
+
+.nova-suggestions-footer {
+    padding: 12px 18px;
+    background: #f8f9fa;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-light);
+    border-top: 2px solid #e0e0e0;
+    font-weight: 500;
+}
+
+.nova-suggestions-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-light);
+}
+
+.nova-suggestions-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.nova-suggestions-empty-text {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.nova-suggestions-empty-hint {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* Scrollbar customizada */
+.nova-suggestions-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.nova-suggestions-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.nova-suggestions-dropdown::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+
+.nova-suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #ff6b5a;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .nova-search-container {
+        max-width: 100%;
+    }
+    
+    .nova-search-input {
+        font-size: 14px;
+    }
+    
+    .nova-filter-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+/* ===== FIM DA NOVA BARRA DE PESQUISA ===== */
+
 /* Logo Styles */
 .logo {
     display: flex;
