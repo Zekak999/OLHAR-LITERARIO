@@ -20,9 +20,29 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 from django.urls import re_path
+from django.http import JsonResponse, FileResponse
+from django.views.decorators.http import require_http_methods
+import os
+
+# View para servir favicon
+def favicon_view(request):
+    favicon_path = os.path.join(settings.BASE_DIR, 'static', 'favicon.svg')
+    if os.path.exists(favicon_path):
+        return FileResponse(open(favicon_path, 'rb'), content_type='image/svg+xml')
+    return JsonResponse({'error': 'Favicon not found'}, status=404)
+
+# View para servir extra-covers-meta.json
+def extra_covers_meta_view(request):
+    json_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'extra-covers-meta.json')
+    if os.path.exists(json_path):
+        return FileResponse(open(json_path, 'rb'), content_type='application/json')
+    # Retornar array vazio se não existir
+    return JsonResponse([], safe=False)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('favicon.ico', favicon_view, name='favicon'),
+    path('images/extra-covers-meta.json', extra_covers_meta_view, name='extra_covers_meta'),
     path('', include('books.urls')),
 ]
 
