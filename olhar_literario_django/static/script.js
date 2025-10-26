@@ -232,15 +232,31 @@ function selectSearchOption(option) {
 }
 
 // Realizar Busca no Banco de Dados
+let buscaEmAndamento = false;
+
 async function realizarBusca() {
+    // Prevenir múltiplas buscas simultâneas
+    if (buscaEmAndamento) {
+        console.log('⚠️ Busca já em andamento, aguarde...');
+        return;
+    }
+    
     const searchInput = $('.search-input');
-    if (!searchInput) return;
+    if (!searchInput) {
+        console.error('Campo de busca não encontrado!');
+        return;
+    }
     
     const searchTerm = searchInput.value.trim();
+    console.log('🔍 Termo de busca:', searchTerm);
+    
     if (!searchTerm) {
         showNotification('Digite algo para buscar', 'error');
         return;
     }
+    
+    // Marcar que busca está em andamento
+    buscaEmAndamento = true;
     
     // Fechar dropdown de sugestões se estiver aberto
     fecharDropdownSugestoes();
@@ -249,10 +265,12 @@ async function realizarBusca() {
     const btn = $('.search-dropdown .dropdown-btn');
     let searchType = 'livros';
     if (btn && btn.childNodes && btn.childNodes[0]) {
-        searchType = btn.childNodes[0].textContent.trim();
+        const btnText = btn.childNodes[0].textContent.trim().toLowerCase();
+        searchType = btnText;
     }
     
-    showNotification(`Buscando ${searchType}: ${searchTerm}...`);
+    console.log('📂 Tipo de busca:', searchType);
+    console.log('🔎 Buscando:', searchTerm, 'em', searchType);
     
     try {
         // Construir URL de busca baseada no tipo
@@ -266,32 +284,40 @@ async function realizarBusca() {
             url = `/api/books?q=${encodeURIComponent(searchTerm)}`;
         }
         
+        console.log('🌐 URL da busca:', url);
+        
         // Buscar no banco de dados
         const res = await fetch(url);
         if (!res.ok) throw new Error('Erro ao buscar');
         
         const livros = await res.json();
+        console.log('📚 Livros encontrados:', livros.length, livros);
         
         if (!Array.isArray(livros) || livros.length === 0) {
             showNotification('Nenhum resultado encontrado', 'error');
+            buscaEmAndamento = false;
             return;
         }
         
         // Se encontrou apenas 1 livro, redirecionar direto
         if (livros.length === 1) {
+            console.log('✅ Redirecionando para:', livros[0].titulo);
             showNotification(`Abrindo: ${livros[0].titulo}`);
             setTimeout(() => {
                 window.location.href = `livro.html?id=${livros[0].id}`;
             }, 500);
         } else {
             // Se encontrou múltiplos, mostrar todos em modal
+            console.log('📋 Mostrando', livros.length, 'resultados em modal');
             showNotification(`${livros.length} resultado(s) encontrado(s)`);
             mostrarResultadosBusca(livros);
+            buscaEmAndamento = false;
         }
         
     } catch (err) {
-        console.error('Erro na busca:', err);
+        console.error('❌ Erro na busca:', err);
         showNotification('Erro ao realizar busca', 'error');
+        buscaEmAndamento = false;
     }
 }
 
