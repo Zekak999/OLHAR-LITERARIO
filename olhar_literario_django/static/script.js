@@ -459,8 +459,9 @@ async function loadCurrentUser() {
         userProfile.dataNascimento = data.dataNascimento || '';
         userProfile.telefone = data.telefone || '';
         userProfile.bio = data.bio || '';
+        // Usar a URL completa retornada pela API
         if (data.foto) {
-            userProfile.foto = data.foto.startsWith('images/') ? data.foto : ('images/' + data.foto);
+            userProfile.foto = data.foto;
         }
         isLoggedIn = true;
         currentUser = userProfile.nome || (userProfile.email || '').split('@')[0];
@@ -486,7 +487,26 @@ function atualizarInterfaceUsuario(estaLogado) {
     if (estaLogado) {
         // Usuário logado - mostrar dropdown de perfil
         if (btnLogin) btnLogin.style.display = 'none';
-        if (dropdownPerfil) dropdownPerfil.style.display = 'block';
+        if (dropdownPerfil) {
+            dropdownPerfil.style.display = 'block';
+            
+            // Atualizar foto de perfil no botão se disponível
+            const perfilBtn = dropdownPerfil.querySelector('.nav-btn');
+            if (perfilBtn && userProfile.foto) {
+                // Adicionar ou atualizar imagem de perfil
+                let img = perfilBtn.querySelector('img.perfil-avatar');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.className = 'perfil-avatar';
+                    img.style.cssText = 'width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid var(--secondary-color);';
+                    perfilBtn.insertBefore(img, perfilBtn.firstChild);
+                }
+                img.src = userProfile.foto;
+                img.onerror = () => {
+                    img.src = 'https://via.placeholder.com/28/ff8b7e/ffffff?text=U';
+                };
+            }
+        }
     } else {
         // Usuário não logado - mostrar botão de login
         if (btnLogin) btnLogin.style.display = 'block';
