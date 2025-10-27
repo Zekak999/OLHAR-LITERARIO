@@ -32,6 +32,7 @@ class Book(models.Model):
         upload_to='book_covers/', 
         blank=True, 
         null=True, 
+        storage=github_storage,
         verbose_name='Capa (Upload - Opcional)',
         help_text='Deixe em branco se usar o link do Google Drive acima'
     )
