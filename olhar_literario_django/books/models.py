@@ -117,7 +117,7 @@ class UserProfile(models.Model):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     data_nascimento = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    foto = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    foto = models.ImageField(upload_to='profile_photos/', blank=True, null=True, storage=github_storage)
     
     class Meta:
         verbose_name = 'Perfil de Usuário'
