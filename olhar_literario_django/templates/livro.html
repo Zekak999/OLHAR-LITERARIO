@@ -169,6 +169,31 @@
             margin-bottom: 10px;
         }
 
+        .comment-header > div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-delete-comment {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-delete-comment:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+
         .comment-author {
             font-weight: 600;
             color: var(--primary-color);
@@ -530,11 +555,21 @@
                         const date = new Date(comentario.created_at);
                         const dateStr = date.toLocaleDateString('pt-BR');
                         
+                        // Verificar se o comentário pertence ao usuário logado
+                        const isOwnComment = userProfile && userProfile.id === comentario.user_id;
+                        
                         return `
-                            <div class="comment-item">
+                            <div class="comment-item" id="comment-${comentario.id}">
                                 <div class="comment-header">
-                                    <span class="comment-author">${comentario.user_nome}</span>
-                                    <span class="comment-rating">${commentStars}</span>
+                                    <div>
+                                        <span class="comment-author">${comentario.user_nome}</span>
+                                        <span class="comment-rating">${commentStars}</span>
+                                    </div>
+                                    ${isOwnComment ? `
+                                        <button class="btn-delete-comment" onclick="deletarComentario(${comentario.id}, '${livro.titulo.replace(/'/g, "\\'")}')">
+                                            🗑️ Deletar
+                                        </button>
+                                    ` : ''}
                                 </div>
                                 <p class="comment-text">${comentario.comment}</p>
                                 <p class="comment-date">${dateStr}</p>
@@ -566,6 +601,40 @@
             } else {
                 navigator.clipboard.writeText(url);
                 showNotification('Link copiado para a área de transferência!');
+            }
+        }
+
+        async function deletarComentario(comentarioId, tituloLivro) {
+            if (!confirm('Tem certeza que deseja deletar este comentário?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showNotification('Você precisa estar logado para deletar comentários', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/comments/${comentarioId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Comentário deletado com sucesso!', 'success');
+                    // Recarregar os detalhes do livro para atualizar a lista de comentários
+                    carregarDetalhesLivro();
+                } else {
+                    showNotification(data.error || 'Erro ao deletar comentário', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao deletar comentário:', error);
+                showNotification('Erro ao deletar comentário', 'error');
             }
         }
 

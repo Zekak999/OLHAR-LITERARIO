@@ -33,6 +33,7 @@ urlpatterns = [
     
     # API - Comentários
     path('api/comments', views.api_comments, name='api_comments'),
+    path('api/comments/<int:comment_id>/delete', views.api_delete_comment, name='api_delete_comment'),
     
     # API - Livros
     path('api/books', views.api_books, name='api_books'),

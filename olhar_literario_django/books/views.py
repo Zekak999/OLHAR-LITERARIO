@@ -403,6 +403,30 @@ def api_comments(request):
         return JsonResponse(comments_data, safe=False)
 
 
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def api_delete_comment(request, comment_id):
+    """Deleta um comentário (apenas o próprio usuário pode deletar)"""
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        comment = Comment.objects.get(id=comment_id)
+        
+        # Verificar se o comentário pertence ao usuário
+        if comment.user.id != user.id:
+            return JsonResponse({'error': 'Você não tem permissão para deletar este comentário'}, status=403)
+        
+        comment.delete()
+        return JsonResponse({'success': True, 'message': 'Comentário deletado com sucesso'})
+    
+    except Comment.DoesNotExist:
+        return JsonResponse({'error': 'Comentário não encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 @require_http_methods(["GET"])
 def api_books(request):
     """Obtém lista de livros cadastrados"""
