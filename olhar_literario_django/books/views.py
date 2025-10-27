@@ -227,23 +227,28 @@ def api_profile(request):
         except UserProfile.DoesNotExist:
             profile = UserProfile.objects.create(user=user)
         
-        # Verificar se a foto existe no disco
+        # Verificar se a foto existe
         foto_url = None
         if profile.foto:
             try:
-                # Verificar se o arquivo existe
-                if os.path.exists(profile.foto.path):
+                # Para GitHubStorage, verificar se tem URL
+                # Para FileSystemStorage, verificar se arquivo existe
+                if hasattr(profile.foto.storage, 'base_url'):
+                    # É GitHubStorage, usar URL diretamente
+                    foto_url = profile.foto.url
+                elif hasattr(profile.foto, 'path') and os.path.exists(profile.foto.path):
+                    # É FileSystemStorage local
                     foto_url = profile.foto.url
                 else:
                     # Arquivo não existe, limpar referência
-                    print(f"⚠️ Foto não encontrada no disco: {profile.foto.path}")
+                    print(f"⚠️ Foto não encontrada")
                     print(f"   Limpando referência do banco de dados...")
                     profile.foto = None
                     profile.save()
             except Exception as e:
                 print(f"⚠️ Erro ao verificar foto: {e}")
-                profile.foto = None
-                profile.save()
+                # Não limpar, pode ser erro temporário
+                foto_url = profile.foto.url if profile.foto else None
         
         return JsonResponse({
             'id': user.id,
@@ -325,8 +330,8 @@ def api_upload_photo(request):
     try:
         profile.foto = file
         profile.save()
-        print(f"✅ Foto salva: {profile.foto.url}")
-        print(f"📂 Caminho completo: {profile.foto.path}")
+        print(f"✅ Foto salva com sucesso!")
+        print(f"📂 URL da foto: {profile.foto.url}")
         
         return JsonResponse({
             'foto': profile.foto.url,
