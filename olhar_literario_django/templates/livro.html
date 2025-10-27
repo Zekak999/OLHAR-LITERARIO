@@ -443,8 +443,21 @@
             const token = localStorage.getItem('authToken');
             const estaLogado = !!token;
             
+            // DEBUG: Verificar valores recebidos
+            console.log('📊 Dados do livro:', {
+                titulo: livro.titulo,
+                media_avaliacoes: livro.media_avaliacoes,
+                total_avaliacoes: livro.total_avaliacoes
+            });
+            
+            // Verificar se função gerarEstrelas existe
+            if (typeof gerarEstrelas !== 'function') {
+                console.error('❌ Função gerarEstrelas não encontrada!');
+            }
+            
             // Gerar estrelas usando a função global (com média visível)
             const starsDisplay = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0, true);
+            console.log('⭐ Stars display:', starsDisplay);
 
             // HTML principal
             const placeholderUrl = 'https://via.placeholder.com/300x450/ff8b7e/ffffff?text=' + encodeURIComponent(livro.titulo);
