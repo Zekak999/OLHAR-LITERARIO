@@ -1,0 +1,22 @@
+from books.models import UserProfile
+import os
+
+# Verificar e limpar fotos perdidas
+perfis_atualizados = 0
+
+for perfil in UserProfile.objects.all():
+    if perfil.foto:
+        try:
+            caminho = perfil.foto.path
+            if not os.path.exists(caminho):
+                print(f"Removendo foto perdida: {perfil.foto.name} - Usuario: {perfil.user.username}")
+                perfil.foto = None
+                perfil.save()
+                perfis_atualizados += 1
+        except:
+            print(f"Erro ao verificar: {perfil.user.username}")
+            perfil.foto = None
+            perfil.save()
+            perfis_atualizados += 1
+
+print(f"\nTotal atualizado: {perfis_atualizados}")
