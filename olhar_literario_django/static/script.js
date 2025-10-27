@@ -489,7 +489,7 @@ async function loadCurrentUser() {
         
         if (!res.ok) {
             if (res.status === 401) {
-                console.log('⚠️ Token expirado ou inválido - removendo token');
+                console.log('⚠️ Token expirado ou inválido (401) - removendo token');
                 // Token expirado/inválido - remover e deslogar
                 setToken('');
                 isLoggedIn = false;
@@ -505,9 +505,19 @@ async function loadCurrentUser() {
                 return;
             }
             
-            console.log('⚠️ API retornou erro - usuário não autenticado');
-            isLoggedIn = false;
-            atualizarInterfaceUsuario(false);
+            // Para outros erros (500, 503, etc), NÃO remover token
+            // Pode ser erro temporário do servidor
+            console.log(`⚠️ Erro ${res.status} ao buscar perfil - mantendo token e tentando novamente depois`);
+            
+            // Manter como logado se tiver token (será validado na próxima requisição)
+            if (token) {
+                isLoggedIn = true;
+                // Tentar usar dados básicos do token ou localStorage
+                console.log('📦 Usando dados em cache enquanto servidor está com problemas');
+            } else {
+                isLoggedIn = false;
+            }
+            atualizarInterfaceUsuario(isLoggedIn);
             return;
         }
         

@@ -204,6 +204,7 @@
         // Carregar dados do perfil quando a página carrega
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 Página de perfil carregando...');
+            console.log('🔑 Token inicial:', localStorage.getItem('authToken') ? 'presente' : 'ausente');
             
             // Carregar perfil do usuário
             console.log('📡 Carregando perfil do usuário...');
@@ -211,10 +212,12 @@
             
             console.log('✅ isLoggedIn:', isLoggedIn);
             console.log('👤 userProfile:', userProfile);
+            console.log('🔑 Token após loadCurrentUser:', localStorage.getItem('authToken') ? 'presente' : 'ausente');
             
             // Verificar se está logado APÓS carregar (sem mensagem de sessão expirada)
             if (!isLoggedIn) {
                 console.log('❌ Não logado - redirecionando para página inicial');
+                console.log('⚠️ ATENÇÃO: Token foi removido ou loadCurrentUser falhou');
                 window.location.href = 'index.html';
                 return;
             }
