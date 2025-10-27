@@ -12,9 +12,18 @@ def criar_user_profile(sender, instance, created, **kwargs):
     """
     Cria automaticamente um UserProfile quando um novo User é criado.
     Isso evita erros ao tentar acessar user.profile quando não existe.
+    
+    Nota: Não cria durante o registro (raw=True) para evitar duplicação.
+    O registro cria o profile com os dados completos.
     """
-    if created:
-        UserProfile.objects.create(user=instance)
+    # Pular se for um registro (a view cria o profile com dados)
+    if created and not kwargs.get('raw', False):
+        # Verificar se já existe profile (pode ter sido criado pela view)
+        if not hasattr(instance, 'profile'):
+            try:
+                UserProfile.objects.get(user=instance)
+            except UserProfile.DoesNotExist:
+                UserProfile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)

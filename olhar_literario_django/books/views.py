@@ -157,16 +157,26 @@ def api_register(request):
         )
         print(f"✅ Usuário criado: {user.id}")
         
-        # Criar perfil com avatar padrão e nickname
-        print(f"🔧 Criando perfil para usuário {user.id}...")
-        profile = UserProfile.objects.create(
+        # Criar ou atualizar perfil com avatar padrão e nickname
+        print(f"🔧 Criando/atualizando perfil para usuário {user.id}...")
+        profile, created = UserProfile.objects.get_or_create(
             user=user,
-            nickname=nickname,
-            data_nascimento=data_nascimento if data_nascimento else None,
-            avatar_tipo='initials',  # Avatar com iniciais por padrão
-            avatar_personalizado=None
+            defaults={
+                'nickname': nickname,
+                'data_nascimento': data_nascimento if data_nascimento else None,
+                'avatar_tipo': 'initials',
+                'avatar_personalizado': None
+            }
         )
-        print(f"✅ Perfil criado: {profile.id}")
+        
+        # Se o profile já existia (criado pelo signal), atualizar os dados
+        if not created:
+            profile.nickname = nickname
+            profile.data_nascimento = data_nascimento if data_nascimento else None
+            profile.avatar_tipo = 'initials'
+            profile.save()
+        
+        print(f"✅ Perfil {'criado' if created else 'atualizado'}: {profile.id}")
         
         # Criar token
         print(f"🔧 Criando token para usuário {user.id}...")
