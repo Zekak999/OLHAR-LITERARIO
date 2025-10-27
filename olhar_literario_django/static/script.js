@@ -478,8 +478,24 @@ async function loadCurrentUser() {
         console.log('📥 Resposta da API:', res.status, res.statusText);
         
         if (!res.ok) {
-            console.log('⚠️ API retornou erro - usuário não autenticado (mantendo token)');
-            // NÃO remover o token aqui - deixar o usuário decidir fazer logout
+            if (res.status === 401) {
+                console.log('⚠️ Token expirado ou inválido - removendo token');
+                // Token expirado/inválido - remover e deslogar
+                setToken('');
+                isLoggedIn = false;
+                atualizarInterfaceUsuario(false);
+                
+                // Se estiver na página de perfil, mostrar mensagem e redirecionar
+                if (window.location.pathname.includes('perfil.html')) {
+                    showNotification('Sua sessão expirou. Faça login novamente.', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+                return;
+            }
+            
+            console.log('⚠️ API retornou erro - usuário não autenticado');
             isLoggedIn = false;
             atualizarInterfaceUsuario(false);
             return;
@@ -516,6 +532,7 @@ async function loadCurrentUser() {
         atualizarInterfaceUsuario(true);
     } catch (err) {
         console.error('❌ Erro em loadCurrentUser:', err);
+        // Erro de rede ou outro - não remover token ainda
         isLoggedIn = false;
         atualizarInterfaceUsuario(false);
     }
