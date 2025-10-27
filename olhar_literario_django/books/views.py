@@ -141,23 +141,29 @@ def api_register(request):
     
     # Criar usuário
     try:
+        print(f"🔧 Criando usuário: {email}")
         user = User.objects.create(
             username=email,  # Usar email como username
             email=email,
             first_name=nome,
             password=make_password(senha)
         )
+        print(f"✅ Usuário criado: {user.id}")
         
         # Criar perfil com avatar padrão
+        print(f"🔧 Criando perfil para usuário {user.id}...")
         profile = UserProfile.objects.create(
             user=user,
             data_nascimento=data_nascimento if data_nascimento else None,
             avatar_tipo='initials',  # Avatar com iniciais por padrão
             avatar_personalizado=None
         )
+        print(f"✅ Perfil criado: {profile.id}")
         
         # Criar token
+        print(f"🔧 Criando token para usuário {user.id}...")
         token = AuthToken.objects.create(user=user)
+        print(f"✅ Token criado: {token.token[:10]}...")
         
         return JsonResponse({
             'user': {
@@ -168,6 +174,9 @@ def api_register(request):
             'token': token.token
         })
     except Exception as e:
+        print(f"❌ Erro ao criar usuário: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': f'Erro ao criar usuário: {str(e)}'}, status=500)
 
 
