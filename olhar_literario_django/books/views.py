@@ -148,10 +148,12 @@ def api_register(request):
             password=make_password(senha)
         )
         
-        # Criar perfil
+        # Criar perfil com avatar padrão
         profile = UserProfile.objects.create(
             user=user,
-            data_nascimento=data_nascimento if data_nascimento else None
+            data_nascimento=data_nascimento if data_nascimento else None,
+            avatar_tipo='initials',  # Avatar com iniciais por padrão
+            avatar_personalizado=None
         )
         
         # Criar token
