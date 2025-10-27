@@ -148,10 +148,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Arquivos estáticos do frontend (HTML, CSS, JS)
-# IMPORTANTE: Não incluir BASE_DIR.parent para evitar loop infinito com staticfiles
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Pasta static dentro de olhar_literario_django (CSS, JS, logo)
-    BASE_DIR.parent / 'images',  # Pasta images do projeto (capas de livros)
+    # REMOVIDO: BASE_DIR.parent / 'images' - Causava problemas de import
+    # As imagens agora devem estar em media/ ou serem servidas de outra forma
 ]
 
 # Media files (uploads de usuários - fotos de perfil e capas de livros)
@@ -160,7 +160,6 @@ MEDIA_ROOT = BASE_DIR / 'media'  # Pasta media dentro de olhar_literario_django
 
 # Permitir servir arquivos estáticos em desenvolvimento
 # Em produção, use um servidor web (nginx, apache, etc)
-import os
 if DEBUG:
     # Servir arquivos estáticos em desenvolvimento
     STATICFILES_FINDERS = [
