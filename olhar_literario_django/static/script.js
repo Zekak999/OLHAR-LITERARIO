@@ -169,6 +169,7 @@ function novaMostrarSugestoes(livros, termo) {
         const autor = destacar(livro.autor || 'Autor Desconhecido');
         const genero = livro.genero || 'Sem gênero';
         const badge = livro.destaque ? '<span class="nova-suggestion-badge">⭐ DESTAQUE</span>' : '';
+        const stars = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0);
         
         return `
             <div class="nova-suggestion-item" onclick="window.location.href='livro.html?id=${livro.id}'">
@@ -177,6 +178,7 @@ function novaMostrarSugestoes(livros, termo) {
                 <div class="nova-suggestion-info">
                     <div class="nova-suggestion-title">${titulo}${badge}</div>
                     <div class="nova-suggestion-author">${autor}</div>
+                    <div class="nova-suggestion-stars">${stars}</div>
                     <div class="nova-suggestion-genre">📖 ${genero}</div>
                 </div>
                 <div class="nova-suggestion-arrow">›</div>
@@ -285,6 +287,37 @@ async function novaRealizarBusca() {
 }
 // ===== FIM DA NOVA BARRA DE PESQUISA =====
 
+// ===== FUNÇÃO DE ESTRELAS DE AVALIAÇÃO =====
+function gerarEstrelas(mediaAvaliacoes, totalAvaliacoes) {
+    if (!totalAvaliacoes || totalAvaliacoes === 0) {
+        return '<span class="stars">☆☆☆☆☆</span>';
+    }
+    
+    const fullStars = Math.floor(mediaAvaliacoes);
+    const hasHalfStar = (mediaAvaliacoes % 1) >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    let starsHtml = '';
+    
+    // Estrelas cheias
+    for (let i = 0; i < fullStars; i++) {
+        starsHtml += '★';
+    }
+    
+    // Meia estrela
+    if (hasHalfStar) {
+        starsHtml += '⯨'; // ou use '½' se preferir
+    }
+    
+    // Estrelas vazias
+    for (let i = 0; i < emptyStars; i++) {
+        starsHtml += '☆';
+    }
+    
+    return `<span class="stars" title="${mediaAvaliacoes.toFixed(1)} de 5 estrelas">${starsHtml}</span> <span class="rating-count">(${totalAvaliacoes})</span>`;
+}
+// ===== FIM DA FUNÇÃO DE ESTRELAS =====
+
 // --- API helpers (token storage + fetch wrapper) ---
 const API_BASE = '';
 function getToken() { return localStorage.getItem('authToken') || ''; }
@@ -367,20 +400,8 @@ async function carregarLivrosDjango() {
             const sinopse = livro.sinopse || 'Descrição não disponível.';
             const autor = livro.autor || 'Autor Desconhecido';
             
-            // Adicionar estrelas de avaliação
-            let stars = '';
-            if (livro.total_avaliacoes > 0) {
-                const fullStars = Math.floor(livro.media_avaliacoes);
-                const hasHalfStar = livro.media_avaliacoes % 1 >= 0.5;
-                
-                for (let i = 0; i < fullStars; i++) {
-                    stars += '★';
-                }
-                if (hasHalfStar) {
-                    stars += '½';
-                }
-                stars = `<div class="book-rating">${stars} (${livro.total_avaliacoes})</div>`;
-            }
+            // Gerar estrelas de avaliação
+            const stars = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0);
             
             card.innerHTML = `
                 <div class="bookmark"></div>
@@ -392,7 +413,7 @@ async function carregarLivrosDjango() {
                 <div class="book-info">
                     <h3 class="book-title">${livro.titulo}</h3>
                     <p class="book-author">${autor}</p>
-                    ${stars}
+                    <div class="book-rating">${stars}</div>
                     <p class="book-description">${sinopse}</p>
                     <button class="abrir-btn" onclick="event.stopPropagation(); window.location.href='livro.html?id=${livro.id}'">Abrir</button>
                 </div>
