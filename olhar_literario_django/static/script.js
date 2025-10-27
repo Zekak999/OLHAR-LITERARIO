@@ -347,9 +347,19 @@ async function apiFetch(path, options = {}, skipJsonHeader = false) {
 
 // Função auxiliar para obter URL da capa com fallback inteligente
 function obterUrlCapa(livro) {
-    // Se tem capa no banco, usa ela
+    // Se tem capa_url no banco, usa ela (URL completa do Google Drive ou outra)
+    if (livro.capa_url) {
+        return livro.capa_url;
+    }
+    
+    // Se tem campo capa (legacy), usa ele
     if (livro.capa) {
-        return livro.capa;
+        // Se já é URL completa, retorna direto
+        if (livro.capa.startsWith('http')) {
+            return livro.capa;
+        }
+        // Senão, adiciona barra no início para caminho absoluto
+        return livro.capa.startsWith('/') ? livro.capa : '/' + livro.capa;
     }
     
     // Gerar nome do arquivo baseado no título do livro
@@ -360,7 +370,7 @@ function obterUrlCapa(livro) {
         .replace(/-+/g, '-') // Remove hífens duplicados
         .trim();
     
-    return `images/${nomeArquivo}.jpg`;
+    return `/images/${nomeArquivo}.jpg`;
 }
 
 // Carregar livros do banco de dados Django
