@@ -279,24 +279,45 @@ def api_upload_photo(request):
     """Upload de foto de perfil"""
     user = request.authenticated_user
     
+    print(f"📸 Upload de foto - Usuário: {user.username}")
+    print(f"📋 FILES: {request.FILES}")
+    print(f"📋 POST: {request.POST}")
+    
     if 'file' not in request.FILES:
-        return JsonResponse({'error': 'No file'}, status=400)
+        print("❌ Erro: 'file' não encontrado em request.FILES")
+        return JsonResponse({'error': 'No file provided'}, status=400)
     
     file = request.FILES['file']
+    print(f"📁 Arquivo recebido: {file.name} - Tamanho: {file.size} bytes")
+    
     if not file.name:
+        print("❌ Erro: Nome do arquivo vazio")
         return JsonResponse({'error': 'No filename'}, status=400)
     
     # Obter ou criar perfil
     try:
         profile = user.profile
+        print(f"✅ Perfil encontrado: {profile}")
     except UserProfile.DoesNotExist:
         profile = UserProfile.objects.create(user=user)
+        print(f"✅ Perfil criado: {profile}")
     
     # Salvar arquivo
-    profile.foto = file
-    profile.save()
-    
-    return JsonResponse({'foto': profile.foto.url})
+    try:
+        profile.foto = file
+        profile.save()
+        print(f"✅ Foto salva: {profile.foto.url}")
+        print(f"📂 Caminho completo: {profile.foto.path}")
+        
+        return JsonResponse({
+            'foto': profile.foto.url,
+            'message': 'Foto enviada com sucesso!'
+        })
+    except Exception as e:
+        print(f"❌ Erro ao salvar foto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': f'Erro ao salvar: {str(e)}'}, status=500)
 
 
 @csrf_exempt

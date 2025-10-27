@@ -308,6 +308,8 @@
         // Função para alterar foto de perfil
         async function alterarFotoPerfil(event) {
             const file = event.target.files[0];
+            console.log('📸 Iniciando upload de foto...', file);
+            
             if (!file) {
                 showNotification('Nenhum arquivo selecionado', 'error');
                 return;
@@ -315,24 +317,35 @@
 
             // Validar tipo de arquivo
             if (!file.type.startsWith('image/')) {
+                console.error('❌ Tipo inválido:', file.type);
                 showNotification('Por favor, selecione uma imagem válida', 'error');
                 return;
             }
 
             // Validar tamanho (máximo 5MB)
             if (file.size > 5 * 1024 * 1024) {
+                console.error('❌ Arquivo muito grande:', file.size, 'bytes');
                 showNotification('A imagem deve ter no máximo 5MB', 'error');
                 return;
             }
 
+            console.log('✅ Validação OK - Tipo:', file.type, 'Tamanho:', file.size, 'bytes');
             showNotification('Enviando foto...');
 
             try {
                 const formData = new FormData();
                 formData.append('file', file);
+                
+                console.log('📦 FormData criado:', formData);
+                console.log('📦 File no FormData:', formData.get('file'));
 
                 const token = localStorage.getItem('authToken');
-                const res = await fetch('/api/upload-photo', {
+                console.log('🔑 Token:', token ? 'Presente' : 'Ausente');
+                
+                const url = '/api/upload-photo';
+                console.log('📡 Enviando para:', url);
+                
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -340,18 +353,24 @@
                     body: formData
                 });
 
+                console.log('📨 Resposta recebida - Status:', res.status, res.statusText);
+
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
+                    console.error('❌ Erro do servidor:', err);
                     showNotification(err.error || 'Erro ao enviar foto', 'error');
                     return;
                 }
 
                 const data = await res.json();
+                console.log('✅ Sucesso! Dados:', data);
                 
                 // Atualizar a imagem na página
                 const fotoImg = document.getElementById('perfilPageFoto');
                 if (fotoImg) {
-                    fotoImg.src = data.foto + '?t=' + new Date().getTime(); // Cache bust
+                    const novaUrl = data.foto + '?t=' + new Date().getTime();
+                    console.log('🖼️ Atualizando imagem para:', novaUrl);
+                    fotoImg.src = novaUrl;
                 }
 
                 // Atualizar foto no header também
@@ -361,10 +380,10 @@
                 }
 
                 userProfile.foto = data.foto;
-                showNotification('Foto atualizada com sucesso!', 'success');
+                showNotification(data.message || 'Foto atualizada com sucesso!', 'success');
 
             } catch (err) {
-                console.error('Erro ao fazer upload:', err);
+                console.error('❌ Erro ao fazer upload:', err);
                 showNotification('Erro de conexão ao enviar foto', 'error');
             }
         }
