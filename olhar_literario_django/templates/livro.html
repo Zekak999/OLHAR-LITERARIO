@@ -385,6 +385,9 @@
         const bookId = urlParams.get('id');
         const bookTitulo = urlParams.get('titulo');
 
+        // Variável global para armazenar o perfil do usuário logado
+        let userProfile = null;
+
         async function carregarDetalhesLivro() {
             if (!bookId && !bookTitulo) {
                 document.getElementById('bookDetails').innerHTML = `
@@ -397,6 +400,23 @@
             }
 
             try {
+                // Buscar perfil do usuário logado (se estiver logado)
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    try {
+                        const profileRes = await fetch('/api/profile', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        if (profileRes.ok) {
+                            userProfile = await profileRes.json();
+                        }
+                    } catch (err) {
+                        console.log('Usuário não logado ou token inválido');
+                    }
+                }
+
                 // Buscar detalhes do livro
                 let url = '/api/books';
                 if (bookId) {
