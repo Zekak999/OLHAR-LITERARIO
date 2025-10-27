@@ -203,16 +203,40 @@
     <script>
         // Carregar dados do perfil quando a página carrega
         document.addEventListener('DOMContentLoaded', async function() {
-            await loadCurrentUser();
+            console.log('📄 Página de perfil carregando...');
             
-            // Verificar se está logado
-            if (!isLoggedIn) {
+            // Verificar se tem token
+            const token = localStorage.getItem('authToken');
+            console.log('🔑 Token presente?', !!token);
+            
+            if (!token) {
+                console.log('❌ Sem token - redirecionando para login');
                 showNotification('Faça login para acessar seu perfil', 'error');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
                 return;
             }
+            
+            // Carregar perfil do usuário
+            console.log('📡 Carregando perfil do usuário...');
+            await loadCurrentUser();
+            
+            console.log('✅ isLoggedIn:', isLoggedIn);
+            console.log('👤 userProfile:', userProfile);
+            
+            // Verificar se está logado APÓS carregar
+            if (!isLoggedIn) {
+                console.log('❌ Não logado após loadCurrentUser - token pode estar inválido');
+                showNotification('Sessão expirada. Faça login novamente.', 'error');
+                localStorage.removeItem('authToken');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+                return;
+            }
+            
+            console.log('✅ Usuário logado - carregando dados do perfil');
 
             // Preencher campos com dados do usuário
             const nomeInput = document.getElementById('perfilPageNome');

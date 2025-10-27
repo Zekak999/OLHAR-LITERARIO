@@ -448,30 +448,51 @@ async function carregarLivrosDjango() {
 // Load current user/profile if token exists
 async function loadCurrentUser() {
     const token = getToken();
+    console.log('🔍 loadCurrentUser - Token:', token ? 'presente' : 'ausente');
+    
     if (!token) {
         // Não está logado - mostrar botão de login
+        console.log('❌ Sem token - usuário não logado');
+        isLoggedIn = false;
         atualizarInterfaceUsuario(false);
         return;
     }
+    
     try {
+        console.log('📡 Buscando perfil do usuário...');
         const res = await apiFetch('/api/profile');
+        
+        console.log('📥 Resposta da API:', res.status, res.statusText);
+        
         if (!res.ok) {
+            console.log('❌ API retornou erro - removendo token');
             setToken('');
+            isLoggedIn = false;
             atualizarInterfaceUsuario(false);
             return;
         }
+        
         const data = await res.json();
+        console.log('✅ Perfil carregado:', data);
+        
+        userProfile.id = data.id || null;
         userProfile.nome = data.nome || '';
         userProfile.email = data.email || '';
         userProfile.dataNascimento = data.dataNascimento || '';
         userProfile.telefone = data.telefone || '';
         userProfile.bio = data.bio || '';
+        userProfile.avatar_tipo = data.avatar_tipo || 'initials';
+        
         // Usar a URL completa retornada pela API
         if (data.foto) {
             userProfile.foto = data.foto;
         }
+        
         isLoggedIn = true;
         currentUser = userProfile.nome || (userProfile.email || '').split('@')[0];
+        
+        console.log('✅ isLoggedIn definido como true');
+        console.log('👤 currentUser:', currentUser);
         
         // Mostrar botão "Adicionar Livro" apenas para superusuários
         const btnAdicionarLivro = $('#btnAdicionarLivro');
@@ -481,7 +502,8 @@ async function loadCurrentUser() {
         
         atualizarInterfaceUsuario(true);
     } catch (err) {
-        console.error('loadCurrentUser failed', err);
+        console.error('❌ Erro em loadCurrentUser:', err);
+        isLoggedIn = false;
         atualizarInterfaceUsuario(false);
     }
 }
