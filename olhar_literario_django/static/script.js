@@ -2182,7 +2182,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     $$('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
-            if (!href || href === '#') return;
+            // Skip if href is just "#" or if the anchor has onclick attribute
+            if (!href || href === '#' || this.hasAttribute('onclick')) return;
             e.preventDefault();
             const target = document.querySelector(href);
             if (target) {
