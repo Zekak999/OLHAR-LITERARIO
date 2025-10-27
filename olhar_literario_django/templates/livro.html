@@ -487,12 +487,18 @@
         }
 
         function renderizarDetalhes(livro, comentarios) {
+            console.log('🎨 Iniciando renderização...');
+            console.log('📖 Livro:', livro);
+            console.log('💬 Comentários:', comentarios);
+            
             // Usar capa da API (que já vem com get_capa_url()) ou placeholder
             const capaUrl = livro.capa || 'https://via.placeholder.com/300x450/ff8b7e/ffffff?text=' + encodeURIComponent(livro.titulo);
+            console.log('🖼️ Capa URL:', capaUrl);
             
             // Verificar se usuário está logado
             const token = localStorage.getItem('authToken');
             const estaLogado = !!token;
+            console.log('👤 Está logado:', estaLogado);
             
             // DEBUG: Verificar valores recebidos
             console.log('📊 Dados do livro:', {
@@ -504,27 +510,29 @@
             // Verificar se função gerarEstrelas existe
             if (typeof gerarEstrelas !== 'function') {
                 console.error('❌ Função gerarEstrelas não encontrada!');
+                throw new Error('Função gerarEstrelas não está disponível');
             }
             
-            // Gerar estrelas usando a função global (com média visível)
-            const starsDisplay = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0, true);
-            console.log('⭐ Stars display:', starsDisplay);
+            try {
+                // Gerar estrelas usando a função global (com média visível)
+                const starsDisplay = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0, true);
+                console.log('⭐ Stars display:', starsDisplay);
 
-            // HTML principal
-            const placeholderUrl = 'https://via.placeholder.com/300x450/ff8b7e/ffffff?text=' + encodeURIComponent(livro.titulo);
-            
-            let html = `
-                <div class="book-details-header">
-                    <div class="book-details-cover">
-                        <img src="${capaUrl}" alt="${livro.titulo}" data-fallback="${placeholderUrl}">
-                    </div>
-                    <div class="book-details-info">
-                        <h1 class="book-details-title">${livro.titulo}</h1>
-                        <p class="book-details-author">${livro.autor || 'Autor Desconhecido'}</p>
-                        
-                        <div class="book-details-rating">
-                            ${starsDisplay}
+                // HTML principal
+                const placeholderUrl = 'https://via.placeholder.com/300x450/ff8b7e/ffffff?text=' + encodeURIComponent(livro.titulo);
+                
+                let html = `
+                    <div class="book-details-header">
+                        <div class="book-details-cover">
+                            <img src="${capaUrl}" alt="${livro.titulo}" data-fallback="${placeholderUrl}">
                         </div>
+                        <div class="book-details-info">
+                            <h1 class="book-details-title">${livro.titulo}</h1>
+                            <p class="book-details-author">${livro.autor || 'Autor Desconhecido'}</p>
+                            
+                            <div class="book-details-rating">
+                                ${starsDisplay}
+                            </div>
 
                         <div class="book-details-meta">
                             ${livro.editora ? `
@@ -614,6 +622,17 @@
                     this.onerror = null;
                     this.src = this.dataset.fallback;
                 };
+            }
+            } catch (renderError) {
+                console.error('❌ ERRO na renderização:', renderError);
+                console.error('Stack trace:', renderError.stack);
+                document.getElementById('bookDetails').innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <p style="color: var(--text-light); font-size: 18px;">Erro ao renderizar detalhes do livro: ${renderError.message}</p>
+                        <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Verifique o console para mais detalhes</p>
+                        <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 20px; text-decoration: none;">Voltar para início</a>
+                    </div>
+                `;
             }
         }
 
