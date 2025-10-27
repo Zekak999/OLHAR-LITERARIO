@@ -23,27 +23,42 @@ class GitHubStorage(Storage):
         super().__init__(*args, **kwargs)
         self.github_token = os.environ.get('GITHUB_TOKEN')
         self.github_repo = os.environ.get('GITHUB_REPO', 'vidafacilnohard/olharliterario')
-        self.github_branch = 'master'
+        self.github_branch = 'main'  # Corrigido de 'master' para 'main'
         # Usar JSDelivr como CDN - sem limite de requisições e com cache
         self.base_url = f'https://cdn.jsdelivr.net/gh/{self.github_repo}@{self.github_branch}/olhar_literario_django/media/'
     
     def _save(self, name, content):
         """
         Salva o arquivo direto no GitHub e retorna o caminho
+        Fallback: salva localmente se GitHub não estiver configurado
         """
         # Ler conteúdo
         content.seek(0)
         file_content = content.read()
         
-        # Fazer upload para o GitHub
+        # Fazer upload para o GitHub (apenas em produção)
         if self.github_token:
             success = self._github_upload(name, file_content)
             if not success:
                 print(f"⚠️ Falha ao fazer upload para o GitHub: {name}")
+                # Fallback: salvar localmente
+                return self._save_locally(name, file_content)
         else:
-            print(f"⚠️ GITHUB_TOKEN não configurado. Configure para uploads automáticos.")
+            print(f"⚠️ GITHUB_TOKEN não configurado. Salvando localmente...")
+            # Salvar localmente em desenvolvimento
+            return self._save_locally(name, file_content)
         
         return name
+    
+    def _save_locally(self, name, content):
+        """
+        Salva o arquivo localmente (fallback para desenvolvimento)
+        """
+        from django.core.files.storage import FileSystemStorage
+        from django.conf import settings
+        
+        local_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+        return local_storage.save(name, ContentFile(content))
     
     def _github_upload(self, file_path, content):
         """
