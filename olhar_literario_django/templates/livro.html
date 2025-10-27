@@ -389,7 +389,12 @@
         let userProfile = null;
 
         async function carregarDetalhesLivro() {
+            console.log('📖 Iniciando carregamento de detalhes do livro...');
+            console.log('🔍 bookId:', bookId);
+            console.log('🔍 bookTitulo:', bookTitulo);
+            
             if (!bookId && !bookTitulo) {
+                console.log('❌ Nenhum ID ou título fornecido');
                 document.getElementById('bookDetails').innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
                         <p style="color: var(--text-light); font-size: 18px;">Livro não encontrado.</p>
@@ -400,19 +405,24 @@
             }
 
             try {
+                console.log('👤 Verificando se usuário está logado...');
                 // Buscar perfil do usuário logado (se estiver logado)
                 const token = localStorage.getItem('authToken');
                 if (token) {
                     try {
+                        console.log('🔑 Token encontrado, buscando perfil...');
                         const profileRes = await fetch('/api/profile', {
                             headers: {
                                 'Authorization': `Bearer ${token}`
                             }
                         });
+                        console.log('📥 Resposta /api/profile:', profileRes.status);
                         if (profileRes.ok) {
                             userProfile = await profileRes.json();
+                            console.log('✅ Perfil carregado:', userProfile);
                         }
                     } catch (err) {
+                        console.log('⚠️ Erro ao buscar perfil:', err);
                         console.log('Usuário não logado ou token inválido');
                     }
                 }
@@ -425,31 +435,51 @@
                     url += `?titulo=${encodeURIComponent(bookTitulo)}`;
                 }
                 
+                console.log('📡 Buscando livro em:', url);
                 const res = await fetch(url);
-                if (!res.ok) throw new Error('Erro ao carregar livro');
+                console.log('📥 Resposta /api/books:', res.status, res.statusText);
+                
+                if (!res.ok) {
+                    console.error('❌ Erro HTTP:', res.status);
+                    throw new Error(`Erro ao carregar livro: ${res.status}`);
+                }
                 
                 const livros = await res.json();
+                console.log('📚 Livros recebidos:', livros);
+                console.log('📖 Total de livros:', livros.length);
+                
                 const livro = livros[0]; // Pegar o primeiro resultado
                 
                 if (!livro) {
+                    console.error('❌ Nenhum livro encontrado no array');
                     throw new Error('Livro não encontrado');
                 }
+                
+                console.log('✅ Livro encontrado:', livro.titulo);
 
                 // Buscar comentários do livro (usando o título)
+                console.log('💬 Buscando comentários para:', livro.titulo);
                 const commentsRes = await fetch(`/api/comments?book=${encodeURIComponent(livro.titulo)}`);
+                console.log('📥 Resposta /api/comments:', commentsRes.status);
+                
                 let comentarios = [];
                 if (commentsRes.ok) {
                     comentarios = await commentsRes.json();
+                    console.log('💬 Comentários recebidos:', comentarios.length);
                 }
 
                 // Renderizar detalhes
+                console.log('🎨 Renderizando detalhes do livro...');
                 renderizarDetalhes(livro, comentarios);
+                console.log('✅ Detalhes renderizados com sucesso!');
 
             } catch (err) {
-                console.error('Erro ao carregar detalhes:', err);
+                console.error('❌ ERRO CRÍTICO ao carregar detalhes:', err);
+                console.error('Stack trace:', err.stack);
                 document.getElementById('bookDetails').innerHTML = `
                     <div style="text-align: center; padding: 60px 20px;">
-                        <p style="color: var(--text-light); font-size: 18px;">Erro ao carregar detalhes do livro.</p>
+                        <p style="color: var(--text-light); font-size: 18px;">Erro ao carregar detalhes do livro: ${err.message}</p>
+                        <p style="color: var(--text-light); font-size: 14px; margin-top: 10px;">Verifique o console para mais detalhes</p>
                         <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 20px; text-decoration: none;">Voltar para início</a>
                     </div>
                 `;
@@ -635,7 +665,19 @@
         }
 
         // Carregar detalhes ao carregar a página
-        carregarDetalhesLivro();
+        console.log('🚀 Script da página carregado');
+        
+        // Aguardar DOM estar pronto
+        if (document.readyState === 'loading') {
+            console.log('⏳ DOM ainda carregando, aguardando DOMContentLoaded...');
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('✅ DOM carregado, iniciando carregamento do livro...');
+                carregarDetalhesLivro();
+            });
+        } else {
+            console.log('✅ DOM já carregado, iniciando carregamento imediato...');
+            carregarDetalhesLivro();
+        }
     </script>
 
     <!-- Modal de Login -->
