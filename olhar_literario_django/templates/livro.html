@@ -385,8 +385,7 @@
         const bookId = urlParams.get('id');
         const bookTitulo = urlParams.get('titulo');
 
-        // Variável global para armazenar o perfil do usuário logado
-        let userProfile = null;
+        // userProfile já está declarado no script.js global
 
         async function carregarDetalhesLivro() {
             console.log('📖 Iniciando carregamento de detalhes do livro...');

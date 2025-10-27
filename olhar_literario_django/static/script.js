@@ -2065,8 +2065,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Try to restore logged-in user from token
     await loadCurrentUser();
     
-    // Carregar livros do banco de dados Django
-    await carregarLivrosDjango();
+    // Carregar livros do banco de dados Django (somente na página principal/biblioteca)
+    if ($('#booksGrid')) {
+        await carregarLivrosDjango();
+    }
 
     // Adicionar máscara de data para o campo de nascimento
     const campoData = $('#dataNascimentoCadastro');
