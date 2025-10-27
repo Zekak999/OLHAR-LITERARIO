@@ -366,25 +366,38 @@ function obterUrlCapa(livro) {
 // Carregar livros do banco de dados Django
 async function carregarLivrosDjango() {
     try {
-        // Buscar apenas livros em destaque
-        const res = await fetch('/api/books?destaque=true');
+        // Buscar TODOS os livros (removido filtro de destaque para testar)
+        console.log('🔍 Buscando livros da API...');
+        const res = await fetch('/api/books');
+        
+        console.log('📡 Resposta da API:', res.status, res.statusText);
+        
         if (!res.ok) {
-            console.warn('Erro ao carregar livros do Django');
+            console.error('❌ Erro ao carregar livros do Django:', res.status);
             return;
         }
         
         const livros = await res.json();
+        console.log('📚 Livros recebidos:', livros.length, 'livros');
+        console.log('📋 Dados dos livros:', livros);
+        
         if (!Array.isArray(livros) || livros.length === 0) {
-            console.log('Nenhum livro em destaque encontrado no banco de dados');
+            console.warn('⚠️ Nenhum livro encontrado no banco de dados!');
+            console.log('💡 Execute: python manage.py shell < popular_livros.py');
             return;
         }
         
         const grid = $('#booksGrid');
-        if (!grid) return;
+        if (!grid) {
+            console.error('❌ Elemento #booksGrid não encontrado!');
+            return;
+        }
         
+        console.log('✅ Grid encontrado, limpando cards antigos...');
         // Limpar TODOS os cards (incluindo hardcoded)
         grid.innerHTML = '';
         
+        console.log('📖 Adicionando', livros.length, 'livros ao grid...');
         // Adicionar livros em destaque do Django
         livros.forEach(livro => {
             const card = document.createElement('div');
