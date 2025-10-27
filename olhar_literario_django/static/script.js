@@ -509,8 +509,10 @@ function atualizarInterfaceUsuario(estaLogado) {
                     perfilBtn.insertBefore(img, perfilBtn.firstChild);
                 }
                 img.src = userProfile.foto;
-                img.onerror = () => {
-                    img.src = 'https://via.placeholder.com/28/ff8b7e/ffffff?text=U';
+                // Prevenir loop infinito no onerror
+                img.onerror = function() {
+                    this.onerror = null; // Remove o handler para não criar loop
+                    this.style.display = 'none'; // Esconde a imagem quebrada
                 };
             }
         }
