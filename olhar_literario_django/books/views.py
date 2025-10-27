@@ -115,6 +115,7 @@ def api_register(request):
         return JsonResponse({'error': 'JSON inválido'}, status=400)
     
     nome = data.get('nome')
+    nickname = data.get('nickname')  # Novo campo
     email = data.get('email')
     senha = data.get('senha')
     data_nascimento = data.get('dataNascimento')
@@ -122,6 +123,8 @@ def api_register(request):
     # Validar campos obrigatórios
     if not nome:
         return JsonResponse({'error': 'Nome é obrigatório'}, status=400)
+    if not nickname:
+        return JsonResponse({'error': 'Usuário/Nickname é obrigatório'}, status=400)
     if not email:
         return JsonResponse({'error': 'Email é obrigatório'}, status=400)
     if not senha:
@@ -139,6 +142,10 @@ def api_register(request):
     if User.objects.filter(username=email).exists():
         return JsonResponse({'error': 'Este email já está cadastrado'}, status=400)
     
+    # Verificar se nickname já existe
+    if UserProfile.objects.filter(nickname=nickname).exists():
+        return JsonResponse({'error': 'Este usuário/nickname já está em uso'}, status=400)
+    
     # Criar usuário
     try:
         print(f"🔧 Criando usuário: {email}")
@@ -150,10 +157,11 @@ def api_register(request):
         )
         print(f"✅ Usuário criado: {user.id}")
         
-        # Criar perfil com avatar padrão
+        # Criar perfil com avatar padrão e nickname
         print(f"🔧 Criando perfil para usuário {user.id}...")
         profile = UserProfile.objects.create(
             user=user,
+            nickname=nickname,
             data_nascimento=data_nascimento if data_nascimento else None,
             avatar_tipo='initials',  # Avatar com iniciais por padrão
             avatar_personalizado=None
@@ -461,10 +469,18 @@ def api_comments(request):
         
         comments_data = []
         for comment in comments:
+            # Buscar nickname do perfil, se não existir usa o nome ou username
+            try:
+                nickname = comment.user.profile.nickname
+            except:
+                nickname = None
+            
+            display_name = nickname or comment.user.first_name or comment.user.username
+            
             comments_data.append({
                 'id': comment.id,
                 'user_id': comment.user.id,
-                'user_nome': comment.user.username,
+                'user_nome': display_name,
                 'book_title': comment.book_title,
                 'comment': comment.comment,
                 'rating': comment.rating,

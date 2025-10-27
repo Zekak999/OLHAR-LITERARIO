@@ -115,6 +115,7 @@ class UserProfile(models.Model):
     Perfil estendido do usuário com informações adicionais
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    nickname = models.CharField(max_length=50, blank=True, null=True, verbose_name='Usuário/Nickname')
     telefone = models.CharField(max_length=20, blank=True, null=True)
     data_nascimento = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)

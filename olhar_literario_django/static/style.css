@@ -1178,6 +1178,13 @@ body {
     line-height: 1.6;
     margin-bottom: 20px;
     text-align: justify;
+    /* Limitar a 4 linhas com elipse */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .comentar-btn,

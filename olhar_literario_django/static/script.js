@@ -1673,11 +1673,18 @@ function fazerCadastro(event) {
     event.preventDefault();
     
     const nome = ($('#nome') || {}).value || '';
+    const nickname = ($('#nicknameCadastro') || {}).value || '';
     const email = ($('#emailCadastro') || {}).value || '';
     const dataNascimento = ($('#dataNascimentoCadastro') || {}).value || '';
     const senha = ($('#senhaCadastro') || {}).value || '';
     const confirmarSenha = ($('#confirmarSenhaCadastro') || {}).value || '';
     const aceitarTermos = ($('#aceitarTermos') || {}).checked || false;
+    
+    // Validar nickname
+    if (!nickname || nickname.trim().length < 3) {
+        showNotification('O usuário/nickname deve ter pelo menos 3 caracteres!', 'error');
+        return;
+    }
     
     // Validar senhas
     if (senha !== confirmarSenha) {
@@ -1717,7 +1724,7 @@ function fazerCadastro(event) {
     showNotification('Criando sua conta...');
     (async () => {
         try {
-            const res = await apiFetch('/api/register', { method: 'POST', body: JSON.stringify({ nome, email, senha, dataNascimento }) });
+            const res = await apiFetch('/api/register', { method: 'POST', body: JSON.stringify({ nome, nickname, email, senha, dataNascimento }) });
             const data = await res.json().catch(()=>({}));
             if (!res.ok) {
                 showNotification(data.error || 'Erro ao criar conta', 'error');
