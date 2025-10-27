@@ -250,57 +250,70 @@ def api_profile(request):
     user = request.authenticated_user
     
     if request.method == 'GET':
-        # Obter perfil
-        try:
-            profile = user.profile
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(user=user)
-        except Exception as e:
-            print(f"❌ Erro ao obter/criar perfil: {e}")
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({'error': f'Erro ao obter perfil: {str(e)}'}, status=500)
+        # Obter ou criar perfil - SEMPRE funciona
+        profile, created = UserProfile.objects.get_or_create(user=user)
         
-        # Retornar avatar usando o novo método
-        avatar_url = None
+        if created:
+            print(f"✅ UserProfile criado para {user.username}")
+        
+        # Retornar avatar com fallback seguro
+        avatar_url = "https://ui-avatars.com/api/?name=U&background=4A90E2&color=fff&size=200"
         avatar_tipo = 'initials'
-        if profile:
-            try:
-                avatar_url = profile.get_avatar_url()
-                avatar_tipo = profile.avatar_tipo
-            except Exception as e:
-                print(f"⚠️ Erro ao obter avatar: {e}")
-                import traceback
-                traceback.print_exc()
-                # Fallback para iniciais
-                try:
-                    nome = user.first_name or user.username
-                    iniciais = ''.join([c[0].upper() for c in nome.split()[:2]])
-                    if not iniciais:
-                        iniciais = user.username[0].upper()
-                    avatar_url = f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
-                    avatar_tipo = 'initials'
-                except Exception as fallback_error:
-                    print(f"❌ Erro no fallback de avatar: {fallback_error}")
-                    avatar_url = "https://ui-avatars.com/api/?name=U&background=4A90E2&color=fff&size=200"
         
         try:
-            return JsonResponse({
+            if profile:
+                avatar_tipo = profile.avatar_tipo or 'initials'
+                avatar_url = profile.get_avatar_url()
+        except Exception as e:
+            print(f"⚠️ Erro ao obter avatar, usando fallback: {e}")
+            # Fallback para iniciais
+            try:
+                nome = user.first_name or user.username or 'User'
+                iniciais = ''.join([c[0].upper() for c in nome.split()[:2]]) or 'U'
+                avatar_url = f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
+            except:
+                pass  # Usa o avatar_url padrão definido acima
+        
+        try:
+            response_data = {
                 'id': user.id,
                 'nome': user.first_name or '',
-                'email': user.email,
-                'dataNascimento': profile.data_nascimento.isoformat() if profile and profile.data_nascimento else None,
-                'telefone': profile.telefone if profile else '',
-                'bio': profile.bio if profile else '',
+                'email': user.email or '',
+                'dataNascimento': None,
+                'telefone': '',
+                'bio': '',
                 'foto': avatar_url,
                 'avatar_tipo': avatar_tipo,
                 'is_superuser': user.is_superuser
-            })
+            }
+            
+            # Adicionar dados do profile se existir
+            if profile:
+                try:
+                    response_data['dataNascimento'] = profile.data_nascimento.isoformat() if profile.data_nascimento else None
+                    response_data['telefone'] = profile.telefone or ''
+                    response_data['bio'] = profile.bio or ''
+                except Exception as e:
+                    print(f"⚠️ Erro ao obter dados do profile: {e}")
+            
+            return JsonResponse(response_data)
+            
         except Exception as e:
             print(f"❌ Erro ao criar JsonResponse: {e}")
             import traceback
             traceback.print_exc()
-            return JsonResponse({'error': f'Erro ao criar resposta: {str(e)}'}, status=500)
+            # Retornar resposta mínima em caso de erro
+            return JsonResponse({
+                'id': user.id,
+                'nome': user.username,
+                'email': user.email,
+                'dataNascimento': None,
+                'telefone': '',
+                'bio': '',
+                'foto': "https://ui-avatars.com/api/?name=U&background=4A90E2&color=fff&size=200",
+                'avatar_tipo': 'initials',
+                'is_superuser': user.is_superuser
+            })
     
     elif request.method == 'POST':
         # Atualizar perfil
