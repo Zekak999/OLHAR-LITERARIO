@@ -95,14 +95,18 @@ class Book(models.Model):
     
     def media_avaliacoes(self):
         """Retorna a média das avaliações do livro"""
-        comentarios = self.comentarios.all()
+        # Buscar comentários vinculados pela ForeignKey OU pelo título
+        comentarios = self.comentarios.all() | Comment.objects.filter(book_title__iexact=self.titulo)
+        comentarios = comentarios.distinct()
         if comentarios:
-            return sum(c.rating for c in comentarios) / len(comentarios)
+            return sum(c.rating for c in comentarios) / len(list(comentarios))
         return 0
     
     def total_avaliacoes(self):
         """Retorna o total de avaliações"""
-        return self.comentarios.count()
+        # Buscar comentários vinculados pela ForeignKey OU pelo título
+        comentarios = self.comentarios.all() | Comment.objects.filter(book_title__iexact=self.titulo)
+        return comentarios.distinct().count()
 
 
 class UserProfile(models.Model):

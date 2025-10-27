@@ -322,8 +322,15 @@ def api_comments(request):
             return JsonResponse({'error': 'Missing fields'}, status=400)
         
         try:
+            # Buscar o livro pelo título para vincular corretamente
+            try:
+                book = Book.objects.get(titulo__iexact=book_title)
+            except Book.DoesNotExist:
+                book = None
+            
             comment = Comment.objects.create(
                 user=user,
+                book=book,  # Vincular à ForeignKey
                 book_title=book_title,
                 comment=comment_text,
                 rating=int(rating)
