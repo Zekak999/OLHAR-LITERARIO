@@ -487,20 +487,8 @@
                 const sinopse = livro.sinopse || 'Descrição não disponível.';
                 const autor = livro.autor || 'Autor Desconhecido';
 
-                // Adicionar estrelas de avaliação
-                let stars = '';
-                if (livro.total_avaliacoes > 0) {
-                    const fullStars = Math.floor(livro.media_avaliacoes);
-                    const hasHalfStar = livro.media_avaliacoes % 1 >= 0.5;
-                    
-                    for (let i = 0; i < fullStars; i++) {
-                        stars += '★';
-                    }
-                    if (hasHalfStar) {
-                        stars += '½';
-                    }
-                    stars = `<div class="book-rating">${stars} (${livro.total_avaliacoes})</div>`;
-                }
+                // Gerar estrelas usando a função global (com média visível na biblioteca)
+                const starsHtml = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0, true);
 
                 // Badge de destaque
                 const badgeDestaque = livro.destaque ? '<div style="position: absolute; top: 10px; left: 10px; background: gold; color: black; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 600;">⭐ DESTAQUE</div>' : '';
@@ -515,7 +503,7 @@
                         <h3 class="book-title">${livro.titulo}</h3>
                         <p class="book-author">${autor}</p>
                         ${livro.genero ? `<p style="font-size: 14px; color: var(--text-light); margin: 5px 0;">📖 ${livro.genero}</p>` : ''}
-                        ${stars}
+                        <div class="book-rating">${starsHtml}</div>
                         <p class="book-description">${sinopse.substring(0, 100)}${sinopse.length > 100 ? '...' : ''}</p>
                         <button class="abrir-btn" onclick="event.stopPropagation(); window.location.href='livro.html?id=${livro.id}'">Abrir</button>
                     </div>

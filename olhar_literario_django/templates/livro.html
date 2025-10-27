@@ -443,24 +443,8 @@
             const token = localStorage.getItem('authToken');
             const estaLogado = !!token;
             
-            // Renderizar estrelas
-            let starsHtml = '';
-            if (livro.total_avaliacoes > 0) {
-                const fullStars = Math.floor(livro.media_avaliacoes);
-                const hasHalfStar = livro.media_avaliacoes % 1 >= 0.5;
-                
-                for (let i = 0; i < fullStars; i++) {
-                    starsHtml += '★';
-                }
-                if (hasHalfStar) {
-                    starsHtml += '½';
-                }
-                for (let i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
-                    starsHtml += '☆';
-                }
-            } else {
-                starsHtml = '☆☆☆☆☆';
-            }
+            // Gerar estrelas usando a função global (com média visível)
+            const starsDisplay = gerarEstrelas(livro.media_avaliacoes || 0, livro.total_avaliacoes || 0, true);
 
             // HTML principal
             const placeholderUrl = 'https://via.placeholder.com/300x450/ff8b7e/ffffff?text=' + encodeURIComponent(livro.titulo);
@@ -475,8 +459,7 @@
                         <p class="book-details-author">${livro.autor || 'Autor Desconhecido'}</p>
                         
                         <div class="book-details-rating">
-                            <span class="stars">${starsHtml}</span>
-                            <span class="rating-text">${livro.media_avaliacoes.toFixed(1)} (${livro.total_avaliacoes} ${livro.total_avaliacoes === 1 ? 'avaliação' : 'avaliações'})</span>
+                            ${starsDisplay}
                         </div>
 
                         <div class="book-details-meta">

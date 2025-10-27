@@ -288,9 +288,9 @@ async function novaRealizarBusca() {
 // ===== FIM DA NOVA BARRA DE PESQUISA =====
 
 // ===== FUNÇÃO DE ESTRELAS DE AVALIAÇÃO =====
-function gerarEstrelas(mediaAvaliacoes, totalAvaliacoes) {
+function gerarEstrelas(mediaAvaliacoes, totalAvaliacoes, mostrarMedia = false) {
     if (!totalAvaliacoes || totalAvaliacoes === 0) {
-        return '<span class="stars">☆☆☆☆☆</span>';
+        return '<span class="stars">☆☆☆☆☆</span> <span class="rating-text">0.0 (0 avaliações)</span>';
     }
     
     const fullStars = Math.floor(mediaAvaliacoes);
@@ -314,7 +314,14 @@ function gerarEstrelas(mediaAvaliacoes, totalAvaliacoes) {
         starsHtml += '☆';
     }
     
-    return `<span class="stars" title="${mediaAvaliacoes.toFixed(1)} de 5 estrelas">${starsHtml}</span> <span class="rating-count">(${totalAvaliacoes})</span>`;
+    // Texto de avaliação
+    const textoAvaliacoes = totalAvaliacoes === 1 ? 'avaliação' : 'avaliações';
+    
+    if (mostrarMedia) {
+        return `<span class="stars" title="${mediaAvaliacoes.toFixed(1)} de 5 estrelas">${starsHtml}</span> <span class="rating-text">${mediaAvaliacoes.toFixed(1)} (${totalAvaliacoes} ${textoAvaliacoes})</span>`;
+    } else {
+        return `<span class="stars" title="${mediaAvaliacoes.toFixed(1)} de 5 estrelas">${starsHtml}</span> <span class="rating-count">(${totalAvaliacoes})</span>`;
+    }
 }
 // ===== FIM DA FUNÇÃO DE ESTRELAS =====
 
