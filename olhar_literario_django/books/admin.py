@@ -12,6 +12,8 @@ class BookAdmin(admin.ModelAdmin):
     list_editable = ['disponivel', 'destaque']
     ordering = ['-destaque', '-data_cadastro', 'titulo']
     readonly_fields = ['data_cadastro', 'total_avaliacoes', 'media_avaliacoes']
+    # Necessário para autocomplete_fields em outros admins
+    autocomplete_fields = []
     
     fieldsets = (
         ('Informações Básicas', {
@@ -71,7 +73,8 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'book_title', 'comment', 'book__titulo']
     list_filter = ['rating', 'created_at', 'book']
     ordering = ['-created_at']
-    autocomplete_fields = ['book']
+    # autocomplete_fields removido para evitar erro 500
+    raw_id_fields = ['book']  # Alternativa mais simples ao autocomplete
     
     def get_book_info(self, obj):
         if obj.book:
