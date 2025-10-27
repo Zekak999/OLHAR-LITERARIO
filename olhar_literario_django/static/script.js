@@ -1675,7 +1675,7 @@ function fazerCadastro(event) {
     const nome = ($('#nome') || {}).value || '';
     const nickname = ($('#nicknameCadastro') || {}).value || '';
     const email = ($('#emailCadastro') || {}).value || '';
-    const dataNascimento = ($('#dataNascimentoCadastro') || {}).value || '';
+    const dataNascimentoInput = ($('#dataNascimentoCadastro') || {}).value || '';
     const senha = ($('#senhaCadastro') || {}).value || '';
     const confirmarSenha = ($('#confirmarSenhaCadastro') || {}).value || '';
     const aceitarTermos = ($('#aceitarTermos') || {}).checked || false;
@@ -1695,6 +1695,13 @@ function fazerCadastro(event) {
     if (senha.length < 6) {
         showNotification('A senha deve ter pelo menos 6 caracteres!', 'error');
         return;
+    }
+    
+    // Converter data de DD/MM/AAAA para AAAA-MM-DD
+    let dataNascimento = '';
+    if (dataNascimentoInput && dataNascimentoInput.length === 10) {
+        const partes = dataNascimentoInput.split('/');
+        dataNascimento = `${partes[2]}-${partes[1]}-${partes[0]}`; // AAAA-MM-DD
     }
     
     // Validar data de nascimento (usuário deve ter pelo menos 13 anos)
@@ -1989,12 +1996,50 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Carregar livros do banco de dados Django
     await carregarLivrosDjango();
 
-    // Definir data máxima para cadastro (hoje)
-    const hoje = new Date();
-    const dataMaxima = hoje.toISOString().split('T')[0];
+    // Adicionar máscara de data para o campo de nascimento
     const campoData = $('#dataNascimentoCadastro');
     if (campoData) {
-        campoData.setAttribute('max', dataMaxima);
+        // Função para aplicar máscara DD/MM/AAAA
+        campoData.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+            
+            // Aplica a máscara DD/MM/AAAA
+            if (valor.length <= 2) {
+                e.target.value = valor;
+            } else if (valor.length <= 4) {
+                e.target.value = valor.slice(0, 2) + '/' + valor.slice(2);
+            } else {
+                e.target.value = valor.slice(0, 2) + '/' + valor.slice(2, 4) + '/' + valor.slice(4, 8);
+            }
+        });
+        
+        // Validação ao sair do campo
+        campoData.addEventListener('blur', function(e) {
+            const valor = e.target.value;
+            if (valor && valor.length === 10) {
+                const partes = valor.split('/');
+                const dia = parseInt(partes[0]);
+                const mes = parseInt(partes[1]);
+                const ano = parseInt(partes[2]);
+                
+                // Validar data
+                const dataAtual = new Date();
+                const anoAtual = dataAtual.getFullYear();
+                
+                if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || ano < 1900 || ano > anoAtual) {
+                    alert('Data inválida! Use o formato DD/MM/AAAA com uma data válida.');
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Verificar se a data existe (ex: 31/02 não existe)
+                const dataTestada = new Date(ano, mes - 1, dia);
+                if (dataTestada.getDate() !== dia || dataTestada.getMonth() !== mes - 1) {
+                    alert('Data inválida! Este dia não existe neste mês.');
+                    e.target.value = '';
+                }
+            }
+        });
     }
 
     // Adicionar listeners para verificação de senha
