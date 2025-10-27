@@ -205,19 +205,6 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 Página de perfil carregando...');
             
-            // Verificar se tem token
-            const token = localStorage.getItem('authToken');
-            console.log('🔑 Token presente?', !!token);
-            
-            if (!token) {
-                console.log('❌ Sem token - redirecionando para login');
-                showNotification('Faça login para acessar seu perfil', 'error');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-                return;
-            }
-            
             // Carregar perfil do usuário
             console.log('📡 Carregando perfil do usuário...');
             await loadCurrentUser();
@@ -225,14 +212,10 @@
             console.log('✅ isLoggedIn:', isLoggedIn);
             console.log('👤 userProfile:', userProfile);
             
-            // Verificar se está logado APÓS carregar
+            // Verificar se está logado APÓS carregar (sem mensagem de sessão expirada)
             if (!isLoggedIn) {
-                console.log('❌ Não logado após loadCurrentUser - token pode estar inválido');
-                showNotification('Sessão expirada. Faça login novamente.', 'error');
-                localStorage.removeItem('authToken');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                console.log('❌ Não logado - redirecionando para página inicial');
+                window.location.href = 'index.html';
                 return;
             }
             

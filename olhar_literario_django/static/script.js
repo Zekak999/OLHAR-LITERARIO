@@ -478,8 +478,8 @@ async function loadCurrentUser() {
         console.log('📥 Resposta da API:', res.status, res.statusText);
         
         if (!res.ok) {
-            console.log('❌ API retornou erro - removendo token');
-            setToken('');
+            console.log('⚠️ API retornou erro - usuário não autenticado (mantendo token)');
+            // NÃO remover o token aqui - deixar o usuário decidir fazer logout
             isLoggedIn = false;
             atualizarInterfaceUsuario(false);
             return;
