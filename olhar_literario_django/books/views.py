@@ -227,28 +227,21 @@ def api_profile(request):
         except UserProfile.DoesNotExist:
             profile = UserProfile.objects.create(user=user)
         
-        # Verificar se a foto existe
-        foto_url = None
-        if profile.foto:
+        # Retornar avatar usando o novo método
+        avatar_url = None
+        avatar_tipo = 'initials'
+        if profile:
             try:
-                # Para GitHubStorage, verificar se tem URL
-                # Para FileSystemStorage, verificar se arquivo existe
-                if hasattr(profile.foto.storage, 'base_url'):
-                    # É GitHubStorage, usar URL diretamente
-                    foto_url = profile.foto.url
-                elif hasattr(profile.foto, 'path') and os.path.exists(profile.foto.path):
-                    # É FileSystemStorage local
-                    foto_url = profile.foto.url
-                else:
-                    # Arquivo não existe, limpar referência
-                    print(f"⚠️ Foto não encontrada")
-                    print(f"   Limpando referência do banco de dados...")
-                    profile.foto = None
-                    profile.save()
+                avatar_url = profile.get_avatar_url()
+                avatar_tipo = profile.avatar_tipo
             except Exception as e:
-                print(f"⚠️ Erro ao verificar foto: {e}")
-                # Não limpar, pode ser erro temporário
-                foto_url = profile.foto.url if profile.foto else None
+                print(f"⚠️ Erro ao obter avatar: {e}")
+                # Fallback para iniciais
+                nome = user.first_name or user.username
+                iniciais = ''.join([c[0].upper() for c in nome.split()[:2]])
+                if not iniciais:
+                    iniciais = user.username[0].upper()
+                avatar_url = f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
         
         return JsonResponse({
             'id': user.id,
@@ -257,7 +250,8 @@ def api_profile(request):
             'dataNascimento': profile.data_nascimento.isoformat() if profile.data_nascimento else None,
             'telefone': profile.telefone or '',
             'bio': profile.bio or '',
-            'foto': foto_url,
+            'foto': avatar_url,
+            'avatar_tipo': avatar_tipo,
             'is_superuser': user.is_superuser
         })
     
@@ -300,10 +294,10 @@ def api_profile(request):
 @require_http_methods(["POST"])
 @auth_required
 def api_upload_photo(request):
-    """Upload de foto de perfil"""
+    """Upload de avatar personalizado"""
     user = request.authenticated_user
     
-    print(f"📸 Upload de foto - Usuário: {user.username}")
+    print(f"📸 Upload de avatar - Usuário: {user.username}")
     print(f"📋 FILES: {request.FILES}")
     print(f"📋 POST: {request.POST}")
     
@@ -313,6 +307,15 @@ def api_upload_photo(request):
     
     file = request.FILES['file']
     print(f"📁 Arquivo recebido: {file.name} - Tamanho: {file.size} bytes")
+    
+    # Validar tipo de arquivo
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if file.content_type not in allowed_types:
+        return JsonResponse({'error': 'Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP'}, status=400)
+    
+    # Validar tamanho (máximo 5MB)
+    if file.size > 5 * 1024 * 1024:
+        return JsonResponse({'error': 'Arquivo muito grande. Máximo 5MB'}, status=400)
     
     if not file.name:
         print("❌ Erro: Nome do arquivo vazio")
@@ -328,20 +331,72 @@ def api_upload_photo(request):
     
     # Salvar arquivo
     try:
-        profile.foto = file
+        # Deletar avatar antigo se existir
+        if profile.avatar_personalizado:
+            try:
+                profile.avatar_personalizado.delete(save=False)
+                print("🗑️ Avatar antigo deletado")
+            except:
+                pass
+        
+        profile.avatar_personalizado = file
+        profile.avatar_tipo = 'custom'
         profile.save()
-        print(f"✅ Foto salva com sucesso!")
-        print(f"📂 URL da foto: {profile.foto.url}")
+        
+        avatar_url = profile.get_avatar_url()
+        print(f"✅ Avatar salvo com sucesso!")
+        print(f"📂 URL do avatar: {avatar_url}")
         
         return JsonResponse({
-            'foto': profile.foto.url,
-            'message': 'Foto enviada com sucesso!'
+            'avatar': avatar_url,
+            'tipo': 'custom',
+            'message': 'Avatar atualizado com sucesso!'
         })
     except Exception as e:
-        print(f"❌ Erro ao salvar foto: {str(e)}")
+        print(f"❌ Erro ao salvar avatar: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({'error': f'Erro ao salvar: {str(e)}'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_change_avatar_type(request):
+    """Mudar tipo de avatar (iniciais, dicebear, custom)"""
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        data = json.loads(request.body)
+        tipo = data.get('tipo', 'initials')
+        
+        if tipo not in ['initials', 'dicebear', 'custom']:
+            return JsonResponse({'error': 'Tipo inválido'}, status=400)
+        
+        # Obter ou criar perfil
+        try:
+            profile = user.profile
+        except UserProfile.DoesNotExist:
+            profile = UserProfile.objects.create(user=user)
+        
+        # Se mudar para custom mas não tem foto, usar iniciais
+        if tipo == 'custom' and not profile.avatar_personalizado:
+            tipo = 'initials'
+        
+        profile.avatar_tipo = tipo
+        profile.save()
+        
+        avatar_url = profile.get_avatar_url()
+        
+        return JsonResponse({
+            'avatar': avatar_url,
+            'tipo': tipo,
+            'message': 'Tipo de avatar atualizado!'
+        })
+    except Exception as e:
+        print(f"❌ Erro ao trocar tipo de avatar: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt

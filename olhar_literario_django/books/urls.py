@@ -30,6 +30,7 @@ urlpatterns = [
     # API - Perfil
     path('api/profile', views.api_profile, name='api_profile'),
     path('api/upload-photo', views.api_upload_photo, name='api_upload_photo'),
+    path('api/change-avatar-type', views.api_change_avatar_type, name='api_change_avatar_type'),
     
     # API - Comentários
     path('api/comments', views.api_comments, name='api_comments'),

@@ -103,18 +103,28 @@
         <div class="perfil-page-container" style="max-width: 900px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
             <h1 style="color: var(--secondary-color); margin-bottom: 30px; font-size: 32px;">👤 Meu Perfil</h1>
             
-            <!-- Foto de Perfil -->
+            <!-- Avatar de Perfil -->
             <div class="perfil-foto-section" style="display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px 0; border-bottom: 2px solid #f0f0f0; margin-bottom: 30px;">
                 <img id="perfilPageFoto" 
-                     src="https://via.placeholder.com/150/ff8b7e/ffffff?text=Usuário" 
-                     alt="Foto de Perfil" 
+                     src="https://ui-avatars.com/api/?name=Usuario&background=4A90E2&color=fff&size=200&bold=true" 
+                     alt="Avatar" 
                      class="perfil-foto" 
                      style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid var(--secondary-color); box-shadow: 0 4px 20px rgba(255, 139, 126, 0.3);"
-                     onerror="this.onerror=null; this.src='https://via.placeholder.com/150/ff8b7e/ffffff?text=Usuário';">
-                <label for="inputFotoPerfil" class="btn-alterar-foto" style="display: flex; align-items: center; gap: 8px; background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">
-                    📷 Alterar Foto
-                </label>
-                <input type="file" id="inputFotoPerfil" accept="image/*" style="display: none;" onchange="alterarFotoPerfil(event)">
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Usuario&background=4A90E2&color=fff&size=200&bold=true';">
+                
+                <!-- Opções de Avatar -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                    <button type="button" onclick="trocarTipoAvatar('initials')" class="btn-avatar-tipo" data-tipo="initials" style="padding: 8px 16px; border: 2px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; transition: all 0.3s;">
+                        🔤 Iniciais
+                    </button>
+                    <button type="button" onclick="trocarTipoAvatar('dicebear')" class="btn-avatar-tipo" data-tipo="dicebear" style="padding: 8px 16px; border: 2px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; transition: all 0.3s;">
+                        🎨 Aleatório
+                    </button>
+                    <label for="inputFotoPerfil" class="btn-avatar-tipo" data-tipo="custom" style="padding: 8px 16px; border: 2px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; transition: all 0.3s; margin: 0;">
+                        📷 Enviar Foto
+                    </label>
+                </div>
+                <input type="file" id="inputFotoPerfil" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" onchange="alterarFotoPerfil(event)">
             </div>
 
             <!-- Formulário de Perfil -->
@@ -241,7 +251,14 @@
             if (dataInput) dataInput.value = userProfile.dataNascimento || '';
             if (telInput) telInput.value = userProfile.telefone || '';
             if (bioInput) bioInput.value = userProfile.bio || '';
-            if (fotoImg) fotoImg.src = userProfile.foto || 'https://via.placeholder.com/150/ff8b7e/ffffff?text=Usuário';
+            if (fotoImg && userProfile.foto) {
+                fotoImg.src = userProfile.foto;
+            }
+            
+            // Destacar botão do tipo de avatar atual
+            if (userProfile.avatar_tipo) {
+                destacarTipoAvatar(userProfile.avatar_tipo);
+            }
         });
 
         // Função para salvar o perfil da página
@@ -305,10 +322,70 @@
             })();
         }
 
-        // Função para alterar foto de perfil
+        // Função para trocar tipo de avatar
+        function destacarTipoAvatar(tipo) {
+            document.querySelectorAll('.btn-avatar-tipo').forEach(btn => {
+                if (btn.getAttribute('data-tipo') === tipo) {
+                    btn.style.background = 'var(--accent-color)';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = 'var(--accent-color)';
+                } else {
+                    btn.style.background = 'white';
+                    btn.style.color = '#333';
+                    btn.style.borderColor = '#e0e0e0';
+                }
+            });
+        }
+
+        async function trocarTipoAvatar(tipo) {
+            console.log('🎨 Trocando tipo de avatar para:', tipo);
+            showNotification('Alterando avatar...');
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch('/api/change-avatar-type', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tipo })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showNotification(err.error || 'Erro ao alterar avatar', 'error');
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('✅ Avatar alterado:', data);
+                
+                // Atualizar a imagem na página
+                const fotoImg = document.getElementById('perfilPageFoto');
+                if (fotoImg) {
+                    fotoImg.src = data.avatar + '?t=' + new Date().getTime();
+                }
+
+                // Atualizar no perfil global
+                userProfile.foto = data.avatar;
+                userProfile.avatar_tipo = data.tipo;
+                
+                // Destacar botão selecionado
+                destacarTipoAvatar(data.tipo);
+
+                showNotification(data.message || 'Avatar atualizado!', 'success');
+
+            } catch (err) {
+                console.error('❌ Erro ao trocar avatar:', err);
+                showNotification('Erro de conexão', 'error');
+            }
+        }
+
+        // Função para fazer upload de foto personalizada
         async function alterarFotoPerfil(event) {
             const file = event.target.files[0];
-            console.log('📸 Iniciando upload de foto...', file);
+            console.log('📸 Iniciando upload de avatar personalizado...', file);
             
             if (!file) {
                 showNotification('Nenhum arquivo selecionado', 'error');
@@ -316,9 +393,11 @@
             }
 
             // Validar tipo de arquivo
-            if (!file.type.startsWith('image/')) {
+            const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!tiposPermitidos.includes(file.type)) {
                 console.error('❌ Tipo inválido:', file.type);
-                showNotification('Por favor, selecione uma imagem válida', 'error');
+                showNotification('Use apenas JPG, PNG, GIF ou WebP', 'error');
+                event.target.value = ''; // Limpar input
                 return;
             }
 
@@ -326,26 +405,19 @@
             if (file.size > 5 * 1024 * 1024) {
                 console.error('❌ Arquivo muito grande:', file.size, 'bytes');
                 showNotification('A imagem deve ter no máximo 5MB', 'error');
+                event.target.value = ''; // Limpar input
                 return;
             }
 
             console.log('✅ Validação OK - Tipo:', file.type, 'Tamanho:', file.size, 'bytes');
-            showNotification('Enviando foto...');
+            showNotification('Enviando avatar...');
 
             try {
                 const formData = new FormData();
                 formData.append('file', file);
                 
-                console.log('📦 FormData criado:', formData);
-                console.log('📦 File no FormData:', formData.get('file'));
-
                 const token = localStorage.getItem('authToken');
-                console.log('🔑 Token:', token ? 'Presente' : 'Ausente');
-                
-                const url = '/api/upload-photo';
-                console.log('📡 Enviando para:', url);
-                
-                const res = await fetch(url, {
+                const res = await fetch('/api/upload-photo', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -353,38 +425,39 @@
                     body: formData
                 });
 
-                console.log('📨 Resposta recebida - Status:', res.status, res.statusText);
+                console.log('📨 Resposta recebida - Status:', res.status);
 
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     console.error('❌ Erro do servidor:', err);
-                    showNotification(err.error || 'Erro ao enviar foto', 'error');
+                    showNotification(err.error || 'Erro ao enviar avatar', 'error');
+                    event.target.value = ''; // Limpar input
                     return;
                 }
 
                 const data = await res.json();
-                console.log('✅ Sucesso! Dados:', data);
+                console.log('✅ Sucesso! Avatar:', data);
                 
                 // Atualizar a imagem na página
                 const fotoImg = document.getElementById('perfilPageFoto');
                 if (fotoImg) {
-                    const novaUrl = data.foto + '?t=' + new Date().getTime();
-                    console.log('🖼️ Atualizando imagem para:', novaUrl);
-                    fotoImg.src = novaUrl;
+                    fotoImg.src = data.avatar + '?t=' + new Date().getTime();
                 }
 
-                // Atualizar foto no header também
-                const headerFoto = document.querySelector('.user-info img');
-                if (headerFoto) {
-                    headerFoto.src = data.foto + '?t=' + new Date().getTime();
-                }
+                // Atualizar no perfil global
+                userProfile.foto = data.avatar;
+                userProfile.avatar_tipo = 'custom';
+                
+                // Destacar botão "Enviar Foto"
+                destacarTipoAvatar('custom');
 
-                userProfile.foto = data.foto;
-                showNotification(data.message || 'Foto atualizada com sucesso!', 'success');
+                showNotification(data.message || 'Avatar atualizado!', 'success');
 
             } catch (err) {
                 console.error('❌ Erro ao fazer upload:', err);
-                showNotification('Erro de conexão ao enviar foto', 'error');
+                showNotification('Erro de conexão ao enviar avatar', 'error');
+            } finally {
+                event.target.value = ''; // Limpar input para permitir re-upload
             }
         }
     </script>

@@ -118,7 +118,12 @@ class UserProfile(models.Model):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     data_nascimento = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    foto = models.ImageField(upload_to='profile_photos/', blank=True, null=True, storage=github_storage)
+    avatar_personalizado = models.ImageField(upload_to='avatars/', blank=True, null=True, storage=github_storage)
+    avatar_tipo = models.CharField(max_length=20, default='initials', choices=[
+        ('initials', 'Iniciais'),
+        ('dicebear', 'DiceBear'),
+        ('custom', 'Personalizado')
+    ])
     
     class Meta:
         verbose_name = 'Perfil de Usuário'
@@ -126,6 +131,26 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f'Perfil de {self.user.username}'
+    
+    def get_avatar_url(self):
+        """Retorna a URL do avatar baseado no tipo configurado"""
+        if self.avatar_tipo == 'custom' and self.avatar_personalizado:
+            try:
+                return self.avatar_personalizado.url
+            except:
+                pass
+        
+        # Fallback para avatar gerado
+        if self.avatar_tipo == 'dicebear':
+            # DiceBear API - avatares aleatórios baseados no username
+            return f"https://api.dicebear.com/7.x/avataaars/svg?seed={self.user.username}"
+        
+        # Padrão: Iniciais com UI Avatars
+        nome = self.user.first_name or self.user.username
+        iniciais = ''.join([c[0].upper() for c in nome.split()[:2]])
+        if not iniciais:
+            iniciais = self.user.username[0].upper()
+        return f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
 
 
 class AuthToken(models.Model):
