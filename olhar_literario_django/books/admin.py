@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from .models import UserProfile, AuthToken, Comment, Book
 
 
@@ -76,3 +78,59 @@ class CommentAdmin(admin.ModelAdmin):
             return f'{obj.book.titulo}'
         return obj.book_title
     get_book_info.short_description = 'Livro'
+
+
+# Configuração customizada do User Admin com UserProfile inline
+class UserProfileInline(admin.StackedInline):
+    """
+    Inline para editar UserProfile junto com User no admin
+    """
+    model = UserProfile
+    can_delete = False
+    verbose_name = 'Perfil do Usuário'
+    verbose_name_plural = 'Perfil'
+    fk_name = 'user'
+    fields = ['nickname', 'telefone', 'data_nascimento', 'bio', 'avatar_tipo', 'avatar_personalizado']
+
+
+class CustomUserAdmin(BaseUserAdmin):
+    """
+    Customização do UserAdmin para incluir UserProfile e evitar erros ao deletar
+    """
+    inlines = (UserProfileInline,)
+    
+    def get_inline_instances(self, request, obj=None):
+        """
+        Garante que UserProfile existe antes de tentar exibir inline
+        """
+        if obj:
+            # Criar profile se não existir
+            UserProfile.objects.get_or_create(user=obj)
+        return super().get_inline_instances(request, obj)
+    
+    def delete_model(self, request, obj):
+        """
+        Override do método delete para garantir deleção segura
+        """
+        try:
+            # Django vai lidar automaticamente com CASCADE
+            super().delete_model(request, obj)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Erro ao deletar usuário: {e}')
+    
+    def delete_queryset(self, request, queryset):
+        """
+        Override para deleção em massa segura
+        """
+        try:
+            super().delete_queryset(request, queryset)
+        except Exception as e:
+            from django.contrib import messages
+            messages.error(request, f'Erro ao deletar usuários: {e}')
+
+
+# Desregistrar o User admin padrão e registrar o customizado
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
+

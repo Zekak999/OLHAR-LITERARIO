@@ -9,8 +9,11 @@ class BooksConfig(AppConfig):
     def ready(self):
         """
         Executado quando o Django inicia.
-        Cria o superusuário automaticamente se não existir.
+        Importa os signals e cria o superusuário automaticamente se não existir.
         """
+        # Importar signals para criar UserProfile automaticamente
+        import books.signals
+        
         # Só executar em produção (quando DEBUG=False)
         from django.conf import settings
         if not settings.DEBUG:
@@ -30,10 +33,11 @@ class BooksConfig(AppConfig):
             print("🚀 AUTO-CRIAÇÃO DE SUPERUSUÁRIO (via apps.py)")
             print("=" * 70)
             
-            # Deletar admin existente
+            # Verificar se já existe - NÃO DELETAR!
             if User.objects.filter(username=username).exists():
-                User.objects.filter(username=username).delete()
-                print(f"🗑️  Usuário '{username}' anterior deletado")
+                print(f"✅ Usuário '{username}' já existe")
+                print("=" * 70 + "\n")
+                return
             
             # Criar novo superusuário
             user = User.objects.create_superuser(
