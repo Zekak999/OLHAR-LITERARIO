@@ -51,9 +51,7 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Servir arquivos estáticos em desenvolvimento
 if settings.DEBUG:
-    # Servir arquivos estáticos (CSS, JS, imagens estáticas)
-    urlpatterns += [
-        re_path(r'^(?P<path>.*\.(css|js|png|jpg|jpeg|gif|svg|ico))$', 
-                serve, 
-                {'document_root': settings.BASE_DIR.parent}),
-    ]
+    # Servir arquivos estáticos do diretório static/
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'static')
+    # Servir arquivos de imagens antigas (se existirem)
+    urlpatterns += static('/images/', document_root=settings.BASE_DIR.parent / 'images')
