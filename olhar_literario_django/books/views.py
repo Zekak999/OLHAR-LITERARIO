@@ -255,6 +255,11 @@ def api_profile(request):
             profile = user.profile
         except UserProfile.DoesNotExist:
             profile = UserProfile.objects.create(user=user)
+        except Exception as e:
+            print(f"❌ Erro ao obter/criar perfil: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Erro ao obter perfil: {str(e)}'}, status=500)
         
         # Retornar avatar usando o novo método
         avatar_url = None
@@ -265,24 +270,37 @@ def api_profile(request):
                 avatar_tipo = profile.avatar_tipo
             except Exception as e:
                 print(f"⚠️ Erro ao obter avatar: {e}")
+                import traceback
+                traceback.print_exc()
                 # Fallback para iniciais
-                nome = user.first_name or user.username
-                iniciais = ''.join([c[0].upper() for c in nome.split()[:2]])
-                if not iniciais:
-                    iniciais = user.username[0].upper()
-                avatar_url = f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
+                try:
+                    nome = user.first_name or user.username
+                    iniciais = ''.join([c[0].upper() for c in nome.split()[:2]])
+                    if not iniciais:
+                        iniciais = user.username[0].upper()
+                    avatar_url = f"https://ui-avatars.com/api/?name={iniciais}&background=4A90E2&color=fff&size=200&bold=true"
+                    avatar_tipo = 'initials'
+                except Exception as fallback_error:
+                    print(f"❌ Erro no fallback de avatar: {fallback_error}")
+                    avatar_url = "https://ui-avatars.com/api/?name=U&background=4A90E2&color=fff&size=200"
         
-        return JsonResponse({
-            'id': user.id,
-            'nome': user.first_name,
-            'email': user.email,
-            'dataNascimento': profile.data_nascimento.isoformat() if profile.data_nascimento else None,
-            'telefone': profile.telefone or '',
-            'bio': profile.bio or '',
-            'foto': avatar_url,
-            'avatar_tipo': avatar_tipo,
-            'is_superuser': user.is_superuser
-        })
+        try:
+            return JsonResponse({
+                'id': user.id,
+                'nome': user.first_name or '',
+                'email': user.email,
+                'dataNascimento': profile.data_nascimento.isoformat() if profile and profile.data_nascimento else None,
+                'telefone': profile.telefone if profile else '',
+                'bio': profile.bio if profile else '',
+                'foto': avatar_url,
+                'avatar_tipo': avatar_tipo,
+                'is_superuser': user.is_superuser
+            })
+        except Exception as e:
+            print(f"❌ Erro ao criar JsonResponse: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Erro ao criar resposta: {str(e)}'}, status=500)
     
     elif request.method == 'POST':
         # Atualizar perfil
