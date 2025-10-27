@@ -464,7 +464,7 @@ def api_comments(request):
             comments_data.append({
                 'id': comment.id,
                 'user_id': comment.user.id,
-                'user_nome': comment.user.first_name or comment.user.username,
+                'user_nome': comment.user.username,
                 'book_title': comment.book_title,
                 'comment': comment.comment,
                 'rating': comment.rating,
