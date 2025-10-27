@@ -973,10 +973,10 @@ function verMais() {
 }
 
 // Open Login Modal
-// Open Login Modal
 function abrirLogin() {
-    // Redirecionar para a página de login
-    window.location.href = 'login.html';
+    // Abre o modal de login
+    const modal = $('#loginModal');
+    if (modal) modal.classList.add('active');
 }
 
 // Open Cadastro Modal
