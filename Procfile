@@ -1,1 +1,1 @@
-web: cd olhar_literario_django && python manage.py collectstatic --noinput && python manage.py migrate && gunicorn olhar_literario_django.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 --access-logfile - --error-logfile -
+web: cd olhar_literario_django && python manage.py migrate && gunicorn olhar_literario_django.wsgi:application --bind 0.0.0.0:$PORT
