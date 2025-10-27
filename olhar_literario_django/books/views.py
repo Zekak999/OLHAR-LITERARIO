@@ -9,6 +9,7 @@ from django.conf import settings
 from datetime import timedelta
 import json
 import uuid
+import os
 from pathlib import Path
 from .models import UserProfile, AuthToken, Comment, Book
 
@@ -226,6 +227,24 @@ def api_profile(request):
         except UserProfile.DoesNotExist:
             profile = UserProfile.objects.create(user=user)
         
+        # Verificar se a foto existe no disco
+        foto_url = None
+        if profile.foto:
+            try:
+                # Verificar se o arquivo existe
+                if os.path.exists(profile.foto.path):
+                    foto_url = profile.foto.url
+                else:
+                    # Arquivo não existe, limpar referência
+                    print(f"⚠️ Foto não encontrada no disco: {profile.foto.path}")
+                    print(f"   Limpando referência do banco de dados...")
+                    profile.foto = None
+                    profile.save()
+            except Exception as e:
+                print(f"⚠️ Erro ao verificar foto: {e}")
+                profile.foto = None
+                profile.save()
+        
         return JsonResponse({
             'id': user.id,
             'nome': user.first_name,
@@ -233,7 +252,7 @@ def api_profile(request):
             'dataNascimento': profile.data_nascimento.isoformat() if profile.data_nascimento else None,
             'telefone': profile.telefone or '',
             'bio': profile.bio or '',
-            'foto': profile.foto.url if profile.foto else None,
+            'foto': foto_url,
             'is_superuser': user.is_superuser
         })
     
