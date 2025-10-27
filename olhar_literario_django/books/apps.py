@@ -14,6 +14,12 @@ class BooksConfig(AppConfig):
         # Importar signals para criar UserProfile automaticamente
         import books.signals
         
+        # NÃO executar durante collectstatic, migrate, makemigrations (comandos de build)
+        import sys
+        skip_commands = ['collectstatic', 'makemigrations', 'migrate', 'compilemessages']
+        if any(cmd in sys.argv for cmd in skip_commands):
+            return
+        
         # Só executar em produção (quando DEBUG=False)
         from django.conf import settings
         if not settings.DEBUG:
