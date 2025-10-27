@@ -509,8 +509,33 @@
             
             // Verificar se função gerarEstrelas existe
             if (typeof gerarEstrelas !== 'function') {
-                console.error('❌ Função gerarEstrelas não encontrada!');
-                throw new Error('Função gerarEstrelas não está disponível');
+                console.error('❌ Função gerarEstrelas não encontrada! Criando versão local...');
+                
+                // Criar função local como fallback
+                window.gerarEstrelas = function(mediaAvaliacoes, totalAvaliacoes, mostrarMedia = false) {
+                    if (!totalAvaliacoes || totalAvaliacoes === 0) {
+                        return '<span class="stars">☆☆☆☆☆</span> <span class="rating-text">0.0 (0 avaliações)</span>';
+                    }
+                    
+                    const fullStars = Math.floor(mediaAvaliacoes);
+                    const hasHalfStar = (mediaAvaliacoes % 1) >= 0.5;
+                    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                    
+                    let starsHtml = '';
+                    for (let i = 0; i < fullStars; i++) starsHtml += '★';
+                    if (hasHalfStar) starsHtml += '⯨';
+                    for (let i = 0; i < emptyStars; i++) starsHtml += '☆';
+                    
+                    const textoAvaliacoes = totalAvaliacoes === 1 ? 'avaliação' : 'avaliações';
+                    
+                    if (mostrarMedia) {
+                        return `<span class="stars" title="${mediaAvaliacoes.toFixed(1)} de 5 estrelas">${starsHtml}</span> <span class="rating-text">${mediaAvaliacoes.toFixed(1)} (${totalAvaliacoes} ${textoAvaliacoes})</span>`;
+                    }
+                    
+                    return `<span class="stars">${starsHtml}</span>`;
+                };
+                
+                console.log('✅ Função gerarEstrelas local criada com sucesso');
             }
             
             try {
